@@ -40,6 +40,9 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
                 total += y.numel()
         return correct / total
 
+    loss_history = []
+    acc_history = []
+
     # 学習
     for ep in range(1, epochs + 1):
         model.train()
@@ -72,7 +75,10 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
 
             total_loss += loss.item()
 
+        avg_loss = total_loss / len(train_loader)
         acc = evaluate()
-        print(f"epoch {ep} | loss {total_loss/len(train_loader):.4f} | test acc {acc:.4f}")
+        loss_history.append(avg_loss)
+        acc_history.append(acc)
+        print(f"epoch {ep} | loss {avg_loss:.4f} | test acc {acc:.4f}")
 
-    return model
+    return model, {"loss": loss_history, "accuracy": acc_history}
