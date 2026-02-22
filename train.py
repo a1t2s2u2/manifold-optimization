@@ -7,14 +7,15 @@ from stiefel import retract_qr, project_to_tangent
 from model import MLP_Stiefel, LinearModel
 
 
-def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True):
+def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, dataset="mnist"):
     # データ
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
-    train_ds = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
-    test_ds  = datasets.MNIST(root="./data", train=False, download=True, transform=transform)
+    ds_cls = datasets.FashionMNIST if dataset == "fashion" else datasets.MNIST
+    train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
+    test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=(device!="cpu"))
     test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=(device!="cpu"))
 

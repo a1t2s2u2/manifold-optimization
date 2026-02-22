@@ -7,8 +7,6 @@ if __name__ == "__main__":
     num_epoch = 30
 
     print("=== Stiefel 制約あり ===")
-    train(device=device, epochs=num_epoch, batch_size=256, lr=0.1, use_stiefel=True)
-
-    print()
+    train(device=device, epochs=num_epoch, dataset="fashion", batch_size=256, lr=0.05, use_stiefel=True)
     print("=== 制約なし (SGD) ===")
-    train(device=device, epochs=num_epoch, batch_size=256, lr=0.1, use_stiefel=False)
+    train(device=device, epochs=num_epoch, dataset="fashion", batch_size=256, lr=0.05, use_stiefel=False)
