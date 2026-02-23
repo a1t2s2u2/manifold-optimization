@@ -1,7 +1,10 @@
 import os
+import warnings
 from datetime import datetime
 
 import torch
+
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="torchvision")
 
 from save import save_graphs, save_log
 from train import load_data, train
