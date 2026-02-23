@@ -44,21 +44,25 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
         train_loader, test_loader = load_data(dataset, batch_size, device)
 
     # モデル（データセットに応じて自動選択）
-    num_classes = 10
-    # STL-10: 96x96 → 12x12, CIFAR-10: 32x32 → 4x4 (3回の MaxPool2d(2))
-    flat_dims = {"stl10": 128 * 12 * 12, "cifar10": 128 * 4 * 4}
-    if dataset in flat_dims:
-        flat_dim = flat_dims[dataset]
+    DATASET_INFO = {
+        "mnist":   {"num_classes": 10, "in_channels": 1, "input_size": 28, "model_type": "linear"},
+        "fashion": {"num_classes": 10, "in_channels": 1, "input_size": 28, "model_type": "linear"},
+        "cifar10": {"num_classes": 10, "in_channels": 3, "input_size": 32, "model_type": "cnn"},
+        "stl10":   {"num_classes": 10, "in_channels": 3, "input_size": 96, "model_type": "cnn"},
+    }
+    info = DATASET_INFO[dataset]
+    if info["model_type"] == "cnn":
         if use_stiefel:
-            model = CNN_Stiefel(num_classes=num_classes, flat_dim=flat_dim).to(device)
+            model = CNN_Stiefel(num_classes=info["num_classes"], in_channels=info["in_channels"], input_size=info["input_size"]).to(device)
         else:
-            model = CNN(num_classes=num_classes, flat_dim=flat_dim).to(device)
+            model = CNN(num_classes=info["num_classes"], in_channels=info["in_channels"], input_size=info["input_size"]).to(device)
             opt = torch.optim.SGD(model.parameters(), lr=lr)
     else:
+        input_dim = info["in_channels"] * info["input_size"] ** 2
         if use_stiefel:
-            model = MLP_Stiefel(num_classes=num_classes).to(device)
+            model = MLP_Stiefel(num_classes=info["num_classes"], input_dim=input_dim).to(device)
         else:
-            model = LinearModel(num_classes=num_classes).to(device)
+            model = LinearModel(num_classes=info["num_classes"], input_dim=input_dim).to(device)
             opt = torch.optim.SGD(model.parameters(), lr=lr)
 
     # 評価

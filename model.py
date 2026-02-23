@@ -4,9 +4,9 @@ from stiefel import retract_qr
 
 
 class MLP_Stiefel(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, input_dim=28 * 28):
         super().__init__()
-        self.fc = nn.Linear(28 * 28, num_classes, bias=False)
+        self.fc = nn.Linear(input_dim, num_classes, bias=False)
 
         # 初期化後に Stiefel 上へ乗せる（W^T W = I）
         with torch.no_grad():
@@ -18,9 +18,9 @@ class MLP_Stiefel(nn.Module):
 
 
 class LinearModel(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, input_dim=28 * 28):
         super().__init__()
-        self.fc = nn.Linear(28 * 28, num_classes, bias=False)
+        self.fc = nn.Linear(input_dim, num_classes, bias=False)
 
     def forward(self, x):
         x = x.view(x.size(0), -1)
@@ -28,12 +28,13 @@ class LinearModel(nn.Module):
 
 
 class CNN_Stiefel(nn.Module):
-    def __init__(self, num_classes=10, flat_dim=128 * 12 * 12):
+    def __init__(self, num_classes=10, in_channels=3, input_size=32):
         super().__init__()
+        flat_dim = 32 * (input_size // 8) ** 2
         self.features = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(in_channels, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
         )
         self.fc = nn.Linear(flat_dim, num_classes, bias=False)
 
@@ -48,12 +49,13 @@ class CNN_Stiefel(nn.Module):
 
 
 class CNN(nn.Module):
-    def __init__(self, num_classes=10, flat_dim=128 * 12 * 12):
+    def __init__(self, num_classes=10, in_channels=3, input_size=32):
         super().__init__()
+        flat_dim = 32 * (input_size // 8) ** 2
         self.features = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(in_channels, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
         )
         self.fc = nn.Linear(flat_dim, num_classes, bias=False)
 
