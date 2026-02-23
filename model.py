@@ -28,14 +28,14 @@ class LinearModel(nn.Module):
 
 
 class CNN_Stiefel(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, flat_dim=128 * 12 * 12):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
             nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
             nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
         )
-        self.fc = nn.Linear(128 * 12 * 12, num_classes, bias=False)
+        self.fc = nn.Linear(flat_dim, num_classes, bias=False)
 
         # 初期化後に Stiefel 上へ乗せる（W^T W = I）
         with torch.no_grad():
@@ -48,14 +48,14 @@ class CNN_Stiefel(nn.Module):
 
 
 class CNN(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, flat_dim=128 * 12 * 12):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
             nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
             nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
         )
-        self.fc = nn.Linear(128 * 12 * 12, num_classes, bias=False)
+        self.fc = nn.Linear(flat_dim, num_classes, bias=False)
 
     def forward(self, x):
         x = self.features(x)

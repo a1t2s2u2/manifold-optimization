@@ -8,13 +8,13 @@ from train import train
 
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    dataset = "stl10"
+    dataset = "cifar10"
     num_epoch = 50
     batch_size = 256
     lr = 0.05
 
     # モデル名の決定（データセットに応じて自動選択）
-    model_name = "cnn" if dataset == "stl10" else "linear"
+    model_name = "cnn" if dataset in ("stl10", "cifar10") else "linear"
 
     print("=== Stiefel 制約あり ===")
     _, stiefel_hist = train(device=device, epochs=num_epoch, dataset=dataset,

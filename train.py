@@ -16,6 +16,13 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
         ])
         train_ds = datasets.STL10(root="./data", split="train", download=True, transform=transform)
         test_ds  = datasets.STL10(root="./data", split="test", download=True, transform=transform)
+    elif dataset == "cifar10":
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))
+        ])
+        train_ds = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+        test_ds  = datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
     else:
         transform = transforms.Compose([
             transforms.ToTensor(),
@@ -29,11 +36,14 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
 
     # モデル（データセットに応じて自動選択）
     num_classes = 10
-    if dataset == "stl10":
+    # STL-10: 96x96 → 12x12, CIFAR-10: 32x32 → 4x4 (3回の MaxPool2d(2))
+    flat_dims = {"stl10": 128 * 12 * 12, "cifar10": 128 * 4 * 4}
+    if dataset in flat_dims:
+        flat_dim = flat_dims[dataset]
         if use_stiefel:
-            model = CNN_Stiefel(num_classes=num_classes).to(device)
+            model = CNN_Stiefel(num_classes=num_classes, flat_dim=flat_dim).to(device)
         else:
-            model = CNN(num_classes=num_classes).to(device)
+            model = CNN(num_classes=num_classes, flat_dim=flat_dim).to(device)
             opt = torch.optim.SGD(model.parameters(), lr=lr)
     else:
         if use_stiefel:
