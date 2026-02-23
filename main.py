@@ -1,7 +1,9 @@
 import os
+import random
 import warnings
 from datetime import datetime
 
+import numpy as np
 import torch
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="torchvision")
@@ -9,6 +11,16 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, message="dtype\\(
 
 from save import save_graphs, save_log
 from train import load_data, train
+
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 DATASET_CONFIGS = {
     "mnist":   {"epochs": 20, "lr": 0.1,  "batch_size": 256, "model": "linear"},
@@ -18,6 +30,7 @@ DATASET_CONFIGS = {
 }
 
 if __name__ == "__main__":
+    set_seed(42)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     dataset = "stl10"  # ← ここだけ変える
     cfg = DATASET_CONFIGS[dataset]
