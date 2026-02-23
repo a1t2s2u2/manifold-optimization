@@ -5,6 +5,7 @@ from datetime import datetime
 import torch
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="torchvision")
+warnings.filterwarnings("ignore", category=DeprecationWarning, message="dtype\\(\\).*align")
 
 from save import save_graphs, save_log
 from train import load_data, train
