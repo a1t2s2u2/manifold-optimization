@@ -31,7 +31,7 @@ def load_data(dataset="mnist", batch_size=256, device="cpu"):
         ds_cls = datasets.FashionMNIST if dataset == "fashion" else datasets.MNIST
         train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
         test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
-    pin = device != "cpu"
+    pin = device == "cuda"
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=pin)
     test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=pin)
     return train_loader, test_loader
