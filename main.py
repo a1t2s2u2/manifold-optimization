@@ -13,13 +13,13 @@ from train import load_data, train
 DATASET_CONFIGS = {
     "mnist":   {"epochs": 20, "lr": 0.1,  "batch_size": 256, "model": "linear"},
     "fashion": {"epochs": 20, "lr": 0.1,  "batch_size": 256, "model": "linear"},
-    "cifar10": {"epochs": 50, "lr": 0.05, "batch_size": 256, "model": "cnn"},
-    "stl10":   {"epochs": 50, "lr": 0.05, "batch_size": 256, "model": "cnn"},
+    "cifar10": {"epochs": 20, "lr": 0.05, "batch_size": 256, "model": "cnn"},
+    "stl10":   {"epochs": 20, "lr": 0.05, "batch_size": 256, "model": "cnn"},
 }
 
 if __name__ == "__main__":
     device = "mps" if torch.backends.mps.is_available() else "cpu"
-    dataset = "cifar10"  # ← ここだけ変える
+    dataset = "stl10"  # ← ここだけ変える
     cfg = DATASET_CONFIGS[dataset]
 
     # データ読み込み（ダウンロードはここで完了する）
