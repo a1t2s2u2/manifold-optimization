@@ -1,25 +1,19 @@
+import warnings
+
 import torch
 
 
 @torch.no_grad()
 def retract_qr(W: torch.Tensor) -> torch.Tensor:
     """
-    QR 分解によるリトラクション（Stiefel へ戻す）
-    W^T W = I を満たすように、W を Q に置き換える
+    SVD ベースの polar retraction（Stiefel へ戻す）
+    W^T W = I を満たす最近傍の直交行列を返す。
+    MPS では SVD が未対応のため PyTorch が内部的に CPU フォールバックする。
     """
-    # torch.linalg.qr は W = Q R を返す
-    # MPS では未実装のため CPU にフォールバック
-    orig_device = W.device
-    Q, R = torch.linalg.qr(W.cpu(), mode="reduced")
-    Q, R = Q.to(orig_device), R.to(orig_device)
-
-    # 符号の揺れを抑える（任意だが安定しやすい）
-    diag = torch.diagonal(R, 0)
-    sign = torch.sign(diag)
-    sign[sign == 0] = 1.0
-    Q = Q @ torch.diag(sign)
-
-    return Q
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*linalg_svd.*")
+        U, _, Vh = torch.linalg.svd(W, full_matrices=False)
+    return U @ Vh
 
 
 @torch.no_grad()
