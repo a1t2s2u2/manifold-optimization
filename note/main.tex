@@ -63,11 +63,65 @@ W^\top Z + Z^\top W =0
 \end{proof}
 
 \paragraph{リーマン勾配}
-ユークリッド勾配を
+
+\begin{definition}[ユークリッド勾配]
+$L:\mathbb{R}^{n\times p}\to\mathbb{R}$ を滑らかな関数とする．
+フロベニウス内積
 \[
-G=\nabla L(W)
+\langle A,B\rangle := \mathrm{tr}(A^\top B)
 \]
-とする．
+に関して，
+\[
+dL(W)[Z]
+=
+\langle \nabla L(W), Z\rangle
+\qquad
+(Z\in\mathbb{R}^{n\times p})
+\]
+を満たす行列 $\nabla L(W)$ を
+ユークリッド勾配という．
+\end{definition}
+
+\begin{remark}
+フロベニウス内積は
+\[
+\langle A,B\rangle
+=
+\sum_{i=1}^{n}\sum_{j=1}^{p} A_{ij}B_{ij}
+\]
+で与えられ，
+行列をベクトルとみなしたときの通常の内積に対応する．
+\end{remark}
+
+\begin{remark}
+ユークリッド勾配 $\nabla L(W)$ は，
+$W$ をどの方向に動かすと
+$L$ が最も増加するかを表す行列である．
+\end{remark}
+
+\textbf{補足．}
+フロベニウス内積は，行列を成分ごとに掛けて足し合わせたものであり，
+$\mathbb{R}^{n\times p}$ を通常のユークリッド空間と同様に扱うための内積である．
+すなわち，ベクトルの場合の内積
+$\langle x,y\rangle=\sum_i x_i y_i$
+を行列に拡張したものとみなせる．
+また，$\mathrm{tr}(A^\top B)$ という形に書くことで，
+成分表示を用いずに簡潔に記述できる．
+
+\noindent
+ユークリッド勾配 $\nabla L(W)$ は，
+「$W$ をどの方向に動かすと $L$ が最も増加するか」
+を表す行列であり，
+通常の最急降下法では
+\[
+W \leftarrow W - \eta\,\nabla L(W)
+\]
+という更新に対応する．
+ただし Stiefel 多様体上では，
+この勾配をそのまま用いるのではなく，
+接空間への射影を通してリーマン勾配が定まる．
+
+
 $G$ を接空間へ射影したものを
 Stiefel 多様体上の勾配（リーマン勾配）と呼び，
 \[
