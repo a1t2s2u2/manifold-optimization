@@ -8,7 +8,10 @@ def retract_qr(W: torch.Tensor) -> torch.Tensor:
     W^T W = I を満たすように、W を Q に置き換える
     """
     # torch.linalg.qr は W = Q R を返す
-    Q, R = torch.linalg.qr(W, mode="reduced")
+    # MPS では未実装のため CPU にフォールバック
+    orig_device = W.device
+    Q, R = torch.linalg.qr(W.cpu(), mode="reduced")
+    Q, R = Q.to(orig_device), R.to(orig_device)
 
     # 符号の揺れを抑える（任意だが安定しやすい）
     diag = torch.diagonal(R, 0)
