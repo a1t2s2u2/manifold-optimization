@@ -14,7 +14,7 @@ DATASET_CONFIGS = {
 }
 
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
     dataset = "cifar10"  # ← ここだけ変える
     cfg = DATASET_CONFIGS[dataset]
 
