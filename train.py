@@ -4,27 +4,43 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
 from stiefel import retract_qr, project_to_tangent
-from model import MLP_Stiefel, LinearModel
+from model import MLP_Stiefel, LinearModel, CNN_Stiefel, CNN
 
 
 def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, dataset="mnist"):
     # データ
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
-    ds_cls = datasets.FashionMNIST if dataset == "fashion" else datasets.MNIST
-    train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
-    test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
+    if dataset == "stl10":
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        ])
+        train_ds = datasets.STL10(root="./data", split="train", download=True, transform=transform)
+        test_ds  = datasets.STL10(root="./data", split="test", download=True, transform=transform)
+    else:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])
+        ds_cls = datasets.FashionMNIST if dataset == "fashion" else datasets.MNIST
+        train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
+        test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=(device!="cpu"))
     test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=(device!="cpu"))
 
-    # モデル
-    if use_stiefel:
-        model = MLP_Stiefel(num_classes=10).to(device)
+    # モデル（データセットに応じて自動選択）
+    num_classes = 10
+    if dataset == "stl10":
+        if use_stiefel:
+            model = CNN_Stiefel(num_classes=num_classes).to(device)
+        else:
+            model = CNN(num_classes=num_classes).to(device)
+            opt = torch.optim.SGD(model.parameters(), lr=lr)
     else:
-        model = LinearModel(num_classes=10).to(device)
-        opt = torch.optim.SGD(model.parameters(), lr=lr)
+        if use_stiefel:
+            model = MLP_Stiefel(num_classes=num_classes).to(device)
+        else:
+            model = LinearModel(num_classes=num_classes).to(device)
+            opt = torch.optim.SGD(model.parameters(), lr=lr)
 
     # 評価
     def evaluate():
