@@ -19,20 +19,17 @@ $n,p\in\mathbb{N}$ を $p\le n$ を満たす整数とする．
 によって定義する．
 \end{definition}
 
-Stiefel 多様体上での最適化問題を議論する．
-
-\begin{definition}[Stiefel 制約付き最適化問題]
 $n,p\in\mathbb{N}$ とし，滑らかな関数 $L:\mathbb{R}^{n\times p}\to\mathbb{R}$ を与える．
 Stiefel 多様体上の最適化問題を
 \[
 \min_{W\in\mathrm{St}(p,n)} L(W)
 \]
 と定める．
-\end{definition}
 
 \paragraph{接空間}
-制約 $W^\top W=I_p$ を満たす点 $W\in\mathrm{St}(p,n)$ における
-接空間は
+
+\begin{proposition}[接空間の導出]
+$W\in\mathrm{St}(p,n)$ における接空間は
 \[
 T_W\mathrm{St}(p,n)
 =
@@ -42,15 +39,15 @@ W^\top Z + Z^\top W = 0
 \,\}
 \]
 で与えられる．
+\end{proposition}
 
-\begin{proof}[接空間の導出]
-制約関数を
+\begin{proof}
+制約関数 $F$ を
 \[
 F(W)=W^\top W-I_p
 \]
 とおく．
-曲線 $W(t)$ が $\mathrm{St}(p,n)$ 上にあるとすると
-$F(W(t))=0$ が成り立つ．
+曲線 $W(t)$ が $\mathrm{St}(p,n)$ 上にあるならば、$F(W(t))=0$ が成り立つ．
 これを $t$ で微分すると
 \[
 \frac{d}{dt}(W^\top W)
