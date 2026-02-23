@@ -7,8 +7,8 @@ from stiefel import retract_qr, project_to_tangent
 from model import MLP_Stiefel, LinearModel, CNN_Stiefel, CNN
 
 
-def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, dataset="mnist"):
-    # データ
+def load_data(dataset="mnist", batch_size=256, device="cpu"):
+    """データセットをダウンロード・読み込みし DataLoader を返す。"""
     if dataset == "stl10":
         transform = transforms.Compose([
             transforms.ToTensor(),
@@ -31,8 +31,17 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
         ds_cls = datasets.FashionMNIST if dataset == "fashion" else datasets.MNIST
         train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
         test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=(device!="cpu"))
-    test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=(device!="cpu"))
+    pin = device != "cpu"
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=pin)
+    test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=pin)
+    return train_loader, test_loader
+
+
+def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, dataset="mnist",
+          train_loader=None, test_loader=None):
+    # データ（外部から渡されなければ内部で読み込む）
+    if train_loader is None or test_loader is None:
+        train_loader, test_loader = load_data(dataset, batch_size, device)
 
     # モデル（データセットに応じて自動選択）
     num_classes = 10
