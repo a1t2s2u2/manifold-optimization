@@ -1,10 +1,11 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-from stiefel import retract_qr, project_to_tangent
 from model import MLP_Stiefel, LinearModel, CNN_Stiefel, CNN
+from optimizer import StiefelSGD
 
 
 def load_data(dataset="mnist", batch_size=256, device="cpu"):
@@ -32,7 +33,15 @@ def load_data(dataset="mnist", batch_size=256, device="cpu"):
         train_ds = ds_cls(root="./data", train=True, download=True, transform=transform)
         test_ds  = ds_cls(root="./data", train=False, download=True, transform=transform)
     pin = device == "cuda"
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=pin)
+
+    def worker_init_fn(worker_id):
+        np.random.seed(torch.initial_seed() % 2**32 + worker_id)
+
+    generator = torch.Generator()
+    generator.manual_seed(0)
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2,
+                              pin_memory=pin, worker_init_fn=worker_init_fn, generator=generator)
     test_loader  = DataLoader(test_ds, batch_size=1000, shuffle=False, num_workers=2, pin_memory=pin)
     return train_loader, test_loader
 
@@ -54,6 +63,11 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
     if info["model_type"] == "cnn":
         if use_stiefel:
             model = CNN_Stiefel(num_classes=info["num_classes"], in_channels=info["in_channels"], input_size=info["input_size"]).to(device)
+            feature_params = [p for p in model.parameters() if p is not model.fc.weight]
+            opt = StiefelSGD([
+                {'params': feature_params, 'stiefel': False},
+                {'params': [model.fc.weight], 'stiefel': True},
+            ], lr=lr)
         else:
             model = CNN(num_classes=info["num_classes"], in_channels=info["in_channels"], input_size=info["input_size"]).to(device)
             opt = torch.optim.SGD(model.parameters(), lr=lr)
@@ -61,6 +75,9 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
         input_dim = info["in_channels"] * info["input_size"] ** 2
         if use_stiefel:
             model = MLP_Stiefel(num_classes=info["num_classes"], input_dim=input_dim).to(device)
+            opt = StiefelSGD([
+                {'params': [model.fc.weight], 'stiefel': True},
+            ], lr=lr)
         else:
             model = LinearModel(num_classes=info["num_classes"], input_dim=input_dim).to(device)
             opt = torch.optim.SGD(model.parameters(), lr=lr)
@@ -68,16 +85,16 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
     # 評価
     def evaluate():
         model.eval()
-        correct = 0
+        correct = torch.tensor(0, device=device)
         total = 0
         with torch.no_grad():
             for x, y in test_loader:
                 x, y = x.to(device), y.to(device)
                 logits = model(x)
                 pred = logits.argmax(dim=1)
-                correct += (pred == y).sum().item()
+                correct += (pred == y).sum()
                 total += y.numel()
-        return correct / total
+        return correct.item() / total
 
     loss_history = []
     acc_history = []
@@ -93,24 +110,9 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
             logits = model(x)
             loss = F.cross_entropy(logits, y)
 
-            if use_stiefel:
-                # Stiefel 上でリーマン勾配により手動更新
-                if model.fc.weight.grad is not None:
-                    model.fc.weight.grad.zero_()
-                loss.backward()
-
-                with torch.no_grad():
-                    W = model.fc.weight.T
-                    G = model.fc.weight.grad.T
-                    rgrad = project_to_tangent(W, G)
-                    W_new = W - lr * rgrad
-                    W_new = retract_qr(W_new)
-                    model.fc.weight.copy_(W_new.T)
-            else:
-                # 通常の SGD で更新
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
 
             total_loss += loss.item()
 
