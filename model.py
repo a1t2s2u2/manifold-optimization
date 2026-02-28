@@ -29,11 +29,11 @@ class MLP(nn.Module):
 class CNN(nn.Module):
     def __init__(self, in_channels, input_size, num_classes):
         super().__init__()
-        flat_dim = 32 * (input_size // 8) ** 2
+        flat_dim = 8 * (input_size // 8) ** 2
         self.features = nn.Sequential(
             nn.Conv2d(in_channels, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(8, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(8, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
         )
         self.fc = nn.Linear(flat_dim, num_classes, bias=False)
 
