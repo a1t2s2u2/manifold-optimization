@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import warnings
@@ -8,6 +9,8 @@ import torch
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="torchvision")
 warnings.filterwarnings("ignore", category=DeprecationWarning, message="dtype\\(\\).*align")
+
+logger = logging.getLogger(__name__)
 
 from model import MLP, CNN, make_model
 from save import save_graphs, save_log
@@ -48,6 +51,32 @@ def make_label(exp):
 if __name__ == "__main__":
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
+    # 保存ディレクトリを先に作成（ログファイルの出力先として必要）
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    save_dir = os.path.join("results", timestamp)
+    os.makedirs(save_dir, exist_ok=True)
+
+    # logging セットアップ
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler(os.path.join(save_dir, "training.log"))
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(message)s",
+                          datefmt="%Y-%m-%d %H:%M:%S")
+    )
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.WARNING)
+    stream_handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(message)s",
+                          datefmt="%Y-%m-%d %H:%M:%S")
+    )
+
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
+
     # データ読み込み（1回）
     set_seed(SEED)
     train_loader, test_loader = load_data(DATASET, BATCH_SIZE, device)
@@ -66,6 +95,7 @@ if __name__ == "__main__":
         label = make_label(exp)
 
         set_seed(SEED)
+        logger.info(f"=== {label} (lr={exp['lr']}) ===")
         print(f"\n=== {label} (lr={exp['lr']}) ===")
 
         model = make_model(exp["model"], DATASET, exp["feature"], exp["stiefel"], spd_dim)
@@ -79,11 +109,7 @@ if __name__ == "__main__":
         hist = train_one(model, optimizer, tl, el, device, EPOCHS)
         results[label] = hist
 
-    # 保存
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_dir = os.path.join("results", timestamp)
-    os.makedirs(save_dir, exist_ok=True)
-
+    # グラフ・ログ保存
     epochs = list(range(1, EPOCHS + 1))
     config = {
         "dataset": DATASET,
@@ -97,4 +123,5 @@ if __name__ == "__main__":
     save_graphs(save_dir, epochs, results)
     save_log(save_dir, config, results)
 
+    logger.info(f"保存完了: {save_dir}/")
     print(f"\n保存完了: {save_dir}/")

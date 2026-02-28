@@ -1,11 +1,16 @@
+import logging
+
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from optimizer import StiefelSGD
 from spd import spd_log_euclidean_features
+
+logger = logging.getLogger(__name__)
 
 
 def _worker_init_fn(worker_id):
@@ -49,21 +54,21 @@ def load_data(dataset="mnist", batch_size=256, device="cpu"):
 
 def precompute_spd_features(train_loader, test_loader, batch_size=256):
     """全データの SPD 特徴量を事前計算し、新しい DataLoader を返す。"""
-    def _extract(loader):
+    def _extract(loader, desc):
         all_features, all_labels = [], []
-        for x, y in loader:
+        for x, y in tqdm(loader, desc=desc, leave=False):
             feat = spd_log_euclidean_features(x)
             all_features.append(feat)
             all_labels.append(y)
         return torch.cat(all_features, dim=0), torch.cat(all_labels, dim=0)
 
-    print("SPD 特徴量を事前計算中 (train)...")
-    train_feat, train_labels = _extract(train_loader)
-    print("SPD 特徴量を事前計算中 (test)...")
-    test_feat, test_labels = _extract(test_loader)
+    logger.info("SPD 特徴量を事前計算中 (train)...")
+    train_feat, train_labels = _extract(train_loader, "SPD (train)")
+    logger.info("SPD 特徴量を事前計算中 (test)...")
+    test_feat, test_labels = _extract(test_loader, "SPD (test)")
 
     feat_dim = train_feat.shape[1]
-    print(f"SPD 特徴量次元: {feat_dim}")
+    logger.info(f"SPD 特徴量次元: {feat_dim}")
 
     spd_train_loader = DataLoader(
         TensorDataset(train_feat, train_labels),
@@ -107,12 +112,15 @@ def train_one(model, optimizer, train_loader, test_loader, device, epochs):
 
     loss_history = []
     acc_history = []
+    n_batches = len(train_loader)
 
-    for ep in range(1, epochs + 1):
+    epoch_bar = tqdm(range(1, epochs + 1), desc="Epochs")
+    for ep in epoch_bar:
         model.train()
         total_loss = 0.0
 
-        for x, y in train_loader:
+        batch_bar = tqdm(train_loader, desc=f"Epoch {ep}", leave=False)
+        for step, (x, y) in enumerate(batch_bar, 1):
             x, y = x.to(device), y.to(device)
 
             logits = model(x)
@@ -123,11 +131,14 @@ def train_one(model, optimizer, train_loader, test_loader, device, epochs):
             optimizer.step()
 
             total_loss += loss.item()
+            batch_bar.set_postfix(loss=f"{loss.item():.4f}")
+            logger.debug(f"epoch {ep} step {step}/{n_batches} | loss {loss.item():.4f}")
 
-        avg_loss = total_loss / len(train_loader)
+        avg_loss = total_loss / n_batches
         acc = evaluate()
         loss_history.append(avg_loss)
         acc_history.append(acc)
-        print(f"epoch {ep} | loss {avg_loss:.4f} | test acc {acc:.4f}")
+        epoch_bar.set_postfix(loss=f"{avg_loss:.4f}", acc=f"{acc:.4f}")
+        logger.info(f"epoch {ep} | loss {avg_loss:.4f} | test acc {acc:.4f}")
 
     return {"loss": loss_history, "accuracy": acc_history}
