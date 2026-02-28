@@ -49,24 +49,21 @@ def init_stiefel(model):
         model.fc.weight.copy_(retract_qr(model.fc.weight.T).T)
 
 
-def make_model(dataset, model_type, feature, use_stiefel, spd_dim=None):
-    """モデルを生成するファクトリ関数。"""
+def make_model(model_cls, dataset, feature, stiefel, spd_dim=None):
+    """モデルを生成するファクトリ関数。model_cls に MLP / CNN クラスを直接渡す。"""
     info = DATASET_INFO[dataset]
 
-    if model_type == "cnn":
+    if model_cls is CNN:
         model = CNN(
             in_channels=info["in_channels"],
             input_size=info["input_size"],
             num_classes=info["num_classes"],
         )
     else:
-        if feature == "spd":
-            input_dim = spd_dim
-        else:
-            input_dim = info["in_channels"] * info["input_size"] ** 2
-        model = MLP(input_dim=input_dim, num_classes=info["num_classes"])
+        input_dim = spd_dim if feature == "spd" else info["in_channels"] * info["input_size"] ** 2
+        model = model_cls(input_dim=input_dim, num_classes=info["num_classes"])
 
-    if use_stiefel:
+    if stiefel:
         init_stiefel(model)
 
     return model
