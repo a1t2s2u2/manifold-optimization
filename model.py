@@ -27,6 +27,39 @@ class LinearModel(nn.Module):
         return self.fc(x)
 
 
+class MLP(nn.Module):
+    def __init__(self, num_classes=10, input_dim=28 * 28, hidden_dim=128):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+        )
+        self.fc = nn.Linear(hidden_dim, num_classes, bias=False)
+
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = self.features(x)
+        return self.fc(x)
+
+
+class MLP_Stiefel_Hidden(nn.Module):
+    def __init__(self, num_classes=10, input_dim=28 * 28, hidden_dim=128):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+        )
+        self.fc = nn.Linear(hidden_dim, num_classes, bias=False)
+
+        with torch.no_grad():
+            self.fc.weight.copy_(retract_qr(self.fc.weight.T).T)
+
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = self.features(x)
+        return self.fc(x)
+
+
 class CNN_Stiefel(nn.Module):
     def __init__(self, num_classes=10, in_channels=3, input_size=32):
         super().__init__()

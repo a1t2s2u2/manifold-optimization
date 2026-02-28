@@ -3,13 +3,15 @@ import os
 
 import matplotlib.pyplot as plt
 
+MARKERS = ["o", "s", "^", "D", "v", "p", "*", "X"]
 
-def save_graphs(save_dir, epochs, stiefel_hist, sgd_hist):
-    """Loss と Accuracy のグラフを保存する。"""
+
+def save_graphs(save_dir, epochs, results: dict):
+    """Loss と Accuracy のグラフを保存する。results は {label: {"loss": [...], "accuracy": [...]}} 形式。"""
     # Loss グラフ
     plt.figure()
-    plt.plot(epochs, stiefel_hist["loss"], marker="o", label="Stiefel")
-    plt.plot(epochs, sgd_hist["loss"], marker="s", label="SGD")
+    for i, (label, hist) in enumerate(results.items()):
+        plt.plot(epochs, hist["loss"], marker=MARKERS[i % len(MARKERS)], label=label)
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Training Loss")
@@ -20,8 +22,8 @@ def save_graphs(save_dir, epochs, stiefel_hist, sgd_hist):
 
     # Accuracy グラフ
     plt.figure()
-    plt.plot(epochs, stiefel_hist["accuracy"], marker="o", label="Stiefel")
-    plt.plot(epochs, sgd_hist["accuracy"], marker="s", label="SGD")
+    for i, (label, hist) in enumerate(results.items()):
+        plt.plot(epochs, hist["accuracy"], marker=MARKERS[i % len(MARKERS)], label=label)
     plt.xlabel("Epoch")
     plt.ylabel("Test Accuracy")
     plt.title("Test Accuracy")
@@ -31,12 +33,11 @@ def save_graphs(save_dir, epochs, stiefel_hist, sgd_hist):
     plt.close()
 
 
-def save_log(save_dir, config, stiefel_hist, sgd_hist):
+def save_log(save_dir, config, results: dict):
     """学習ログを JSON として保存する。"""
     log = {
         "config": config,
-        "stiefel": stiefel_hist,
-        "sgd": sgd_hist,
+        "results": results,
     }
     with open(os.path.join(save_dir, "log.json"), "w") as f:
         json.dump(log, f, indent=2)
