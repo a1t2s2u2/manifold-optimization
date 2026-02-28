@@ -67,6 +67,12 @@ def precompute_spd_features(train_loader, test_loader, batch_size=256):
     logger.info("SPD 特徴量を事前計算中 (test)...")
     test_feat, test_labels = _extract(test_loader, "SPD (test)")
 
+    # 訓練データの統計量で標準化（mean=0, std=1）
+    mean = train_feat.mean(dim=0)
+    std = train_feat.std(dim=0).clamp(min=1e-8)
+    train_feat = (train_feat - mean) / std
+    test_feat = (test_feat - mean) / std
+
     feat_dim = train_feat.shape[1]
     logger.info(f"SPD 特徴量次元: {feat_dim}")
 
