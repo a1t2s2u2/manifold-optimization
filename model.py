@@ -3,32 +3,16 @@ import torch.nn as nn
 from stiefel import retract_qr
 
 
-class MLP_Stiefel(nn.Module):
-    def __init__(self, num_classes=10, input_dim=28 * 28):
-        super().__init__()
-        self.fc = nn.Linear(input_dim, num_classes, bias=False)
-
-        # 初期化後に Stiefel 上へ乗せる（W^T W = I）
-        with torch.no_grad():
-            self.fc.weight.copy_(retract_qr(self.fc.weight.T).T)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
-
-
-class LinearModel(nn.Module):
-    def __init__(self, num_classes=10, input_dim=28 * 28):
-        super().__init__()
-        self.fc = nn.Linear(input_dim, num_classes, bias=False)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
+DATASET_INFO = {
+    "mnist":   {"num_classes": 10, "in_channels": 1, "input_size": 28},
+    "fashion": {"num_classes": 10, "in_channels": 1, "input_size": 28},
+    "cifar10": {"num_classes": 10, "in_channels": 3, "input_size": 32},
+    "stl10":   {"num_classes": 10, "in_channels": 3, "input_size": 96},
+}
 
 
 class MLP(nn.Module):
-    def __init__(self, num_classes=10, input_dim=28 * 28, hidden_dim=128):
+    def __init__(self, input_dim, num_classes, hidden_dim=128):
         super().__init__()
         self.features = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -39,50 +23,11 @@ class MLP(nn.Module):
     def forward(self, x):
         x = x.view(x.size(0), -1)
         x = self.features(x)
-        return self.fc(x)
-
-
-class MLP_Stiefel_Hidden(nn.Module):
-    def __init__(self, num_classes=10, input_dim=28 * 28, hidden_dim=128):
-        super().__init__()
-        self.features = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
-        )
-        self.fc = nn.Linear(hidden_dim, num_classes, bias=False)
-
-        with torch.no_grad():
-            self.fc.weight.copy_(retract_qr(self.fc.weight.T).T)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        x = self.features(x)
-        return self.fc(x)
-
-
-class CNN_Stiefel(nn.Module):
-    def __init__(self, num_classes=10, in_channels=3, input_size=32):
-        super().__init__()
-        flat_dim = 32 * (input_size // 8) ** 2
-        self.features = nn.Sequential(
-            nn.Conv2d(in_channels, 8, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-        )
-        self.fc = nn.Linear(flat_dim, num_classes, bias=False)
-
-        # 初期化後に Stiefel 上へ乗せる（W^T W = I）
-        with torch.no_grad():
-            self.fc.weight.copy_(retract_qr(self.fc.weight.T).T)
-
-    def forward(self, x):
-        x = self.features(x)
-        x = x.view(x.size(0), -1)
         return self.fc(x)
 
 
 class CNN(nn.Module):
-    def __init__(self, num_classes=10, in_channels=3, input_size=32):
+    def __init__(self, in_channels, input_size, num_classes):
         super().__init__()
         flat_dim = 32 * (input_size // 8) ** 2
         self.features = nn.Sequential(
@@ -96,3 +41,32 @@ class CNN(nn.Module):
         x = self.features(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
+
+
+def init_stiefel(model):
+    """model.fc.weight を Stiefel 多様体上に射影する。"""
+    with torch.no_grad():
+        model.fc.weight.copy_(retract_qr(model.fc.weight.T).T)
+
+
+def make_model(dataset, model_type, feature, use_stiefel, spd_dim=None):
+    """モデルを生成するファクトリ関数。"""
+    info = DATASET_INFO[dataset]
+
+    if model_type == "cnn":
+        model = CNN(
+            in_channels=info["in_channels"],
+            input_size=info["input_size"],
+            num_classes=info["num_classes"],
+        )
+    else:
+        if feature == "spd":
+            input_dim = spd_dim
+        else:
+            input_dim = info["in_channels"] * info["input_size"] ** 2
+        model = MLP(input_dim=input_dim, num_classes=info["num_classes"])
+
+    if use_stiefel:
+        init_stiefel(model)
+
+    return model

@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, TensorDataset
 
-from model import MLP_Stiefel, MLP_Stiefel_Hidden, LinearModel, MLP, CNN_Stiefel, CNN
 from optimizer import StiefelSGD
 from spd import spd_log_euclidean_features
 
@@ -77,41 +76,22 @@ def precompute_spd_features(train_loader, test_loader, batch_size=256):
     return spd_train_loader, spd_test_loader, feat_dim
 
 
-def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, dataset="mnist",
-          train_loader=None, test_loader=None, use_spd=False, input_dim=None):
-    # データ（外部から渡されなければ内部で読み込む）
-    if train_loader is None or test_loader is None:
-        train_loader, test_loader = load_data(dataset, batch_size, device)
-
-    # モデル（データセットに応じて自動選択）
-    DATASET_INFO = {
-        "mnist":   {"num_classes": 10, "in_channels": 1, "input_size": 28, "model_type": "linear"},
-        "fashion": {"num_classes": 10, "in_channels": 1, "input_size": 28, "model_type": "linear"},
-        "cifar10": {"num_classes": 10, "in_channels": 3, "input_size": 32, "model_type": "cnn"},
-        "stl10":   {"num_classes": 10, "in_channels": 3, "input_size": 96, "model_type": "cnn"},
-    }
-    info = DATASET_INFO[dataset]
-
-    # 全方式で隠れ層付き MLP を使用（公平な比較のため）
-    if use_spd:
-        if input_dim is None:
-            x0, _ = next(iter(train_loader))
-            input_dim = x0.shape[1]
-    else:
-        input_dim = info["in_channels"] * info["input_size"] ** 2
-
+def make_optimizer(model, lr, use_stiefel):
+    """StiefelSGD または標準 SGD を返す。"""
     if use_stiefel:
-        model = MLP_Stiefel_Hidden(num_classes=info["num_classes"], input_dim=input_dim).to(device)
         feature_params = [p for p in model.parameters() if p is not model.fc.weight]
-        opt = StiefelSGD([
+        return StiefelSGD([
             {'params': feature_params, 'stiefel': False},
             {'params': [model.fc.weight], 'stiefel': True},
         ], lr=lr)
     else:
-        model = MLP(num_classes=info["num_classes"], input_dim=input_dim).to(device)
-        opt = torch.optim.SGD(model.parameters(), lr=lr)
+        return torch.optim.SGD(model.parameters(), lr=lr)
 
-    # 評価
+
+def train_one(model, optimizer, train_loader, test_loader, device, epochs):
+    """純粋な学習ループ。loss と accuracy の履歴を返す。"""
+    model = model.to(device)
+
     def evaluate():
         model.eval()
         correct = torch.tensor(0, device=device)
@@ -128,7 +108,6 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
     loss_history = []
     acc_history = []
 
-    # 学習
     for ep in range(1, epochs + 1):
         model.train()
         total_loss = 0.0
@@ -139,9 +118,9 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
             logits = model(x)
             loss = F.cross_entropy(logits, y)
 
-            opt.zero_grad()
+            optimizer.zero_grad()
             loss.backward()
-            opt.step()
+            optimizer.step()
 
             total_loss += loss.item()
 
@@ -151,4 +130,4 @@ def train(device="cpu", epochs=1, batch_size=256, lr=0.1, use_stiefel=True, data
         acc_history.append(acc)
         print(f"epoch {ep} | loss {avg_loss:.4f} | test acc {acc:.4f}")
 
-    return model, {"loss": loss_history, "accuracy": acc_history}
+    return {"loss": loss_history, "accuracy": acc_history}
