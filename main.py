@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, message="dtype\\(
 
 logger = logging.getLogger(__name__)
 
-from model import MLP, CNN, make_model
+from model import MLP, CNN, DATASET_INFO, make_model
 from save import save_graphs, save_log
 from train import load_data, precompute_spd_features, make_optimizer, train_one
 
@@ -20,12 +20,13 @@ from train import load_data, precompute_spd_features, make_optimizer, train_one
 SEED = 42
 EPOCHS = 20
 BATCH_SIZE = 256
-DATASET = "mnist"
+DATASET = "fashion"
 
 # ── 実験リスト（ここを編集して実験を切り替える）────────
 EXPERIMENTS = [
     dict(model=MLP, feature="pixel", stiefel=False, lr=0.1),
     dict(model=MLP, feature="pixel", stiefel=True,  lr=0.1),
+    dict(model=MLP, feature="spd", stiefel=False,  lr=0.1),
     dict(model=MLP, feature="spd", stiefel=True,  lr=0.1)
 ]
 # ────────────────────────────────────────────────────
@@ -81,12 +82,14 @@ if __name__ == "__main__":
     set_seed(SEED)
     train_loader, test_loader = load_data(DATASET, BATCH_SIZE, device)
 
-    # SPD 事前計算（必要なら1回）
+    # SPD 事前計算（必要なら1回、pixel と同じ次元に PCA 射影）
     needs_spd = any(e["feature"] == "spd" for e in EXPERIMENTS)
     spd_train, spd_test, spd_dim = None, None, None
     if needs_spd:
+        info = DATASET_INFO[DATASET]
+        pixel_dim = info["in_channels"] * info["input_size"] ** 2
         spd_train, spd_test, spd_dim = precompute_spd_features(
-            train_loader, test_loader, BATCH_SIZE
+            train_loader, test_loader, BATCH_SIZE, target_dim=pixel_dim
         )
 
     # 各実験を実行

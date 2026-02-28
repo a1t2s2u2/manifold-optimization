@@ -52,8 +52,11 @@ def load_data(dataset="mnist", batch_size=256, device="cpu"):
     return train_loader, test_loader
 
 
-def precompute_spd_features(train_loader, test_loader, batch_size=256):
-    """全データの SPD 特徴量を事前計算し、新しい DataLoader を返す。"""
+def precompute_spd_features(train_loader, test_loader, batch_size=256, target_dim=None):
+    """全データの SPD 特徴量を事前計算し、新しい DataLoader を返す。
+
+    target_dim が指定された場合、訓練データで PCA を fit して射影する。
+    """
     def _extract(loader, desc):
         all_features, all_labels = [], []
         for x, y in tqdm(loader, desc=desc, leave=False):
@@ -72,6 +75,15 @@ def precompute_spd_features(train_loader, test_loader, batch_size=256):
     std = train_feat.std(dim=0).clamp(min=1e-8)
     train_feat = (train_feat - mean) / std
     test_feat = (test_feat - mean) / std
+
+    # PCA で次元を pixel に揃える
+    raw_dim = train_feat.shape[1]
+    if target_dim is not None and target_dim < raw_dim:
+        logger.info(f"PCA: {raw_dim} → {target_dim}")
+        U, S, Vt = torch.linalg.svd(train_feat, full_matrices=False)
+        proj = Vt[:target_dim]  # (target_dim, raw_dim)
+        train_feat = train_feat @ proj.T
+        test_feat = test_feat @ proj.T
 
     feat_dim = train_feat.shape[1]
     logger.info(f"SPD 特徴量次元: {feat_dim}")
