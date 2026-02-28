@@ -17,15 +17,13 @@ from train import load_data, precompute_spd_features, make_optimizer, train_one
 SEED = 42
 EPOCHS = 20
 BATCH_SIZE = 256
+DATASET = "mnist"
 
 # ── 実験リスト（ここを編集して実験を切り替える）────────
 EXPERIMENTS = [
-    dict(dataset="mnist", model=MLP, feature="pixel", stiefel=False, lr=0.1),
-    dict(dataset="mnist", model=MLP, feature="pixel", stiefel=True,  lr=0.1),
-    dict(dataset="mnist", model=CNN, feature="pixel", stiefel=False, lr=0.1),
-    dict(dataset="mnist", model=CNN, feature="pixel", stiefel=True,  lr=0.1),
-    dict(dataset="mnist", model=MLP, feature="spd",   stiefel=False, lr=0.01),
-    dict(dataset="mnist", model=MLP, feature="spd",   stiefel=True,  lr=0.01),
+    dict(model=MLP, feature="pixel", stiefel=False, lr=0.1),
+    dict(model=MLP, feature="pixel", stiefel=True,  lr=0.1),
+    dict(model=MLP, feature="spd", stiefel=True,  lr=0.1)
 ]
 # ────────────────────────────────────────────────────
 
@@ -50,36 +48,33 @@ def make_label(exp):
 if __name__ == "__main__":
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
-    # データをデータセットごとにキャッシュ
-    data_cache = {}   # dataset -> (train_loader, test_loader)
-    spd_cache = {}    # dataset -> (spd_train, spd_test, spd_dim)
+    # データ読み込み（1回）
+    set_seed(SEED)
+    train_loader, test_loader = load_data(DATASET, BATCH_SIZE, device)
 
+    # SPD 事前計算（必要なら1回）
+    needs_spd = any(e["feature"] == "spd" for e in EXPERIMENTS)
+    spd_train, spd_test, spd_dim = None, None, None
+    if needs_spd:
+        spd_train, spd_test, spd_dim = precompute_spd_features(
+            train_loader, test_loader, BATCH_SIZE
+        )
+
+    # 各実験を実行
     results = {}
     for exp in EXPERIMENTS:
-        ds = exp["dataset"]
-
-        # データ読み込み（データセットごとに1回）
-        if ds not in data_cache:
-            set_seed(SEED)
-            data_cache[ds] = load_data(ds, BATCH_SIZE, device)
-
-        # SPD 事前計算（必要なデータセットごとに1回）
-        if exp["feature"] == "spd" and ds not in spd_cache:
-            spd_cache[ds] = precompute_spd_features(*data_cache[ds], BATCH_SIZE)
-
-        spd_dim = spd_cache[ds][2] if ds in spd_cache else None
         label = make_label(exp)
 
         set_seed(SEED)
         print(f"\n=== {label} (lr={exp['lr']}) ===")
 
-        model = make_model(exp["model"], ds, exp["feature"], exp["stiefel"], spd_dim)
+        model = make_model(exp["model"], DATASET, exp["feature"], exp["stiefel"], spd_dim)
         optimizer = make_optimizer(model, exp["lr"], exp["stiefel"])
 
         if exp["feature"] == "spd":
-            tl, el = spd_cache[ds][0], spd_cache[ds][1]
+            tl, el = spd_train, spd_test
         else:
-            tl, el = data_cache[ds]
+            tl, el = train_loader, test_loader
 
         hist = train_one(model, optimizer, tl, el, device, EPOCHS)
         results[label] = hist
@@ -91,7 +86,7 @@ if __name__ == "__main__":
 
     epochs = list(range(1, EPOCHS + 1))
     config = {
-        "dataset": list({e["dataset"] for e in EXPERIMENTS}),
+        "dataset": DATASET,
         "experiments": list(results.keys()),
         "epochs": EPOCHS,
         "batch_size": BATCH_SIZE,
