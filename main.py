@@ -18,16 +18,16 @@ from train import load_data, precompute_spd_features, make_optimizer, train_one
 
 # ── グローバル設定 ──────────────────────────────────
 SEED = 42
-EPOCHS = 20
+EPOCHS = 10
 BATCH_SIZE = 256
-DATASET = "fashion"
+DATASET = "stl10"
 
 # ── 実験リスト（ここを編集して実験を切り替える）────────
 EXPERIMENTS = [
-    dict(model=MLP, feature="pixel", stiefel=False, lr=0.1),
-    dict(model=MLP, feature="pixel", stiefel=True,  lr=0.1),
-    dict(model=MLP, feature="spd", stiefel=False,  lr=0.1),
-    dict(model=MLP, feature="spd", stiefel=True,  lr=0.1)
+    dict(model=MLP, feature="pixel", stiefel=False, lr=0.01),
+    dict(model=MLP, feature="pixel", stiefel=True,  lr=0.01),
+    dict(model=MLP, feature="spd", stiefel=False,  lr=0.01),
+    dict(model=MLP, feature="spd", stiefel=True,  lr=0.01)
 ]
 # ────────────────────────────────────────────────────
 

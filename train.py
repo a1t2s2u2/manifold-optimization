@@ -112,30 +112,32 @@ def make_optimizer(model, lr, use_stiefel):
 
 
 def train_one(model, optimizer, train_loader, test_loader, device, epochs):
-    """純粋な学習ループ。loss と accuracy の履歴を返す。"""
+    """純粋な学習ループ。train/test の loss と accuracy の履歴を返す。"""
     model = model.to(device)
 
-    def evaluate():
+    def evaluate(loader):
         model.eval()
+        total_loss = 0.0
         correct = torch.tensor(0, device=device)
         total = 0
         with torch.no_grad():
-            for x, y in test_loader:
+            for x, y in loader:
                 x, y = x.to(device), y.to(device)
                 logits = model(x)
-                pred = logits.argmax(dim=1)
-                correct += (pred == y).sum()
+                total_loss += F.cross_entropy(logits, y, reduction="sum").item()
+                correct += (logits.argmax(dim=1) == y).sum()
                 total += y.numel()
-        return correct.item() / total
+        return total_loss / total, correct.item() / total
 
-    loss_history = []
-    acc_history = []
+    history = {"train_loss": [], "test_loss": [], "train_acc": [], "test_acc": []}
     n_batches = len(train_loader)
 
     epoch_bar = tqdm(range(1, epochs + 1), desc="Epochs")
     for ep in epoch_bar:
         model.train()
         total_loss = 0.0
+        correct = torch.tensor(0, device=device)
+        total = 0
 
         batch_bar = tqdm(train_loader, desc=f"Epoch {ep}", leave=False)
         for step, (x, y) in enumerate(batch_bar, 1):
@@ -149,14 +151,21 @@ def train_one(model, optimizer, train_loader, test_loader, device, epochs):
             optimizer.step()
 
             total_loss += loss.item()
+            correct += (logits.detach().argmax(dim=1) == y).sum()
+            total += y.numel()
             batch_bar.set_postfix(loss=f"{loss.item():.4f}")
             logger.debug(f"epoch {ep} step {step}/{n_batches} | loss {loss.item():.4f}")
 
-        avg_loss = total_loss / n_batches
-        acc = evaluate()
-        loss_history.append(avg_loss)
-        acc_history.append(acc)
-        epoch_bar.set_postfix(loss=f"{avg_loss:.4f}", acc=f"{acc:.4f}")
-        logger.info(f"epoch {ep} | loss {avg_loss:.4f} | test acc {acc:.4f}")
+        train_loss = total_loss / n_batches
+        train_acc = correct.item() / total
+        test_loss, test_acc = evaluate(test_loader)
 
-    return {"loss": loss_history, "accuracy": acc_history}
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
+        history["test_loss"].append(test_loss)
+        history["test_acc"].append(test_acc)
+
+        epoch_bar.set_postfix(loss=f"{train_loss:.4f}", acc=f"{test_acc:.4f}")
+        logger.info(f"epoch {ep} | train_loss {train_loss:.4f} train_acc {train_acc:.4f} | test_loss {test_loss:.4f} test_acc {test_acc:.4f}")
+
+    return history
