@@ -15,13 +15,13 @@ def save_graphs(save_dir, epochs, results: dict):
     accuracy.png: Train Accuracy (左) | Test Accuracy (右)
     """
     # Loss グラフ (1×2)
-    fig, (ax_train, ax_test) = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    fig, (ax_train, ax_test) = plt.subplots(1, 2, figsize=(12, 5))
     for i, (label, hist) in enumerate(results.items()):
         m = MARKERS[i % len(MARKERS)]
         ax_train.plot(epochs, hist["train_loss"], marker=m, label=label)
         ax_test.plot(epochs, hist["test_loss"], marker=m, label=label)
     ax_train.set(xlabel="Epoch", ylabel="Loss", title="Train Loss")
-    ax_test.set(xlabel="Epoch", title="Test Loss")
+    ax_test.set(xlabel="Epoch", ylabel="Loss", title="Test Loss")
     for ax in (ax_train, ax_test):
         ax.legend()
         ax.grid(True)
@@ -30,13 +30,13 @@ def save_graphs(save_dir, epochs, results: dict):
     plt.close(fig)
 
     # Accuracy グラフ (1×2)
-    fig, (ax_train, ax_test) = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    fig, (ax_train, ax_test) = plt.subplots(1, 2, figsize=(12, 5))
     for i, (label, hist) in enumerate(results.items()):
         m = MARKERS[i % len(MARKERS)]
         ax_train.plot(epochs, hist["train_acc"], marker=m, label=label)
         ax_test.plot(epochs, hist["test_acc"], marker=m, label=label)
     ax_train.set(xlabel="Epoch", ylabel="Accuracy", title="Train Accuracy")
-    ax_test.set(xlabel="Epoch", title="Test Accuracy")
+    ax_test.set(xlabel="Epoch", ylabel="Accuracy", title="Test Accuracy")
     for ax in (ax_train, ax_test):
         ax.legend()
         ax.grid(True)

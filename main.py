@@ -20,7 +20,7 @@ from train import load_data, precompute_spd_features, make_optimizer, train_one
 SEED = 42
 EPOCHS = 10
 BATCH_SIZE = 256
-DATASET = "stl10"
+DATASET = "mnist"
 
 # ── 実験リスト（ここを編集して実験を切り替える）────────
 EXPERIMENTS = [
