@@ -1,3 +1,14 @@
+
+\documentclass[uplatex, dvipdfmx]{jsarticle}
+
+\usepackage{amsmath,amssymb,amsthm}
+
+\newtheorem{definition}{定義}
+\newtheorem{proposition}{命題}
+\newtheorem{remark}{注意}
+
+\begin{document}
+
 \begin{definition}[問題設定]
 $n,p\in\mathbb{N}$ とする．$W\in\mathbb{R}^{n\times p}, x\in\mathbb{R}^{n}$ に対して
 \[
@@ -180,4 +191,4 @@ G_R &= G - W\,\mathrm{sym}(W^\top G),\\
 W &\leftarrow \mathrm{qf}(W - \eta G_R).
 \end{aligned}
 \]
-```
+\end{document}
