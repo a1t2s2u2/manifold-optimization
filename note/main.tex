@@ -3,6 +3,7 @@
 
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
 \usepackage{tcolorbox}
 \tcbuselibrary{theorems}
 
@@ -155,15 +156,25 @@ h_l = \ell_{W_l}(h_{l-1}) = \sigma(W_l^\top h_{l-1})
   % Dots between hidden layers
   \node at (2*\ls, 0) {\large $\cdots$};
 
-  % Layer labels (below)
-  \node[below=4pt, font=\small] at (0, -1) {$h_0 = x$};
-  \node[below=4pt, font=\small] at (\ls, -1.5) {$h_1$};
-  \node[below=4pt, font=\small] at (3*\ls, -1.5) {$h_L$};
-  \node[below=4pt, font=\small] at (4*\ls, -0.5) {$f(x)$};
+  % Dimension braces (above each layer)
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    (-0.4, 1.55) -- (0.4, 1.55) node[midway, above=5pt, font=\scriptsize] {$n_0$};
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    ({\ls-0.4}, 2.05) -- ({\ls+0.4}, 2.05) node[midway, above=5pt, font=\scriptsize] {$n_1$};
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    ({3*\ls-0.4}, 2.05) -- ({3*\ls+0.4}, 2.05) node[midway, above=5pt, font=\scriptsize] {$n_L$};
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    ({4*\ls-0.4}, 1.05) -- ({4*\ls+0.4}, 1.05) node[midway, above=5pt, font=\scriptsize] {$n_{L+1}$};
 
-  % Weight labels (above connections)
-  \node[font=\small] at (0.5*\ls, 1.7) {$\ell_{W_1}$};
-  \node[font=\small] at (3.5*\ls, 1.7) {$W_{L+1}$};
+  % Layer labels (below each layer)
+  \node[font=\small] at (0, -1.5) {$h_0 = x$};
+  \node[font=\small] at (\ls, -2.0) {$h_1$};
+  \node[font=\small] at (3*\ls, -2.0) {$h_L$};
+  \node[font=\small] at (4*\ls, -1.0) {$f(x)$};
+
+  % Weight labels (above braces)
+  \node[font=\small] at (0.5*\ls, 2.7) {$\ell_{W_1}$};
+  \node[font=\small] at (3.5*\ls, 2.7) {$W_{L+1}$};
 
 \end{tikzpicture}
 \caption{多層ネットワークの構造．
