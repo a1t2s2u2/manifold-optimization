@@ -221,17 +221,34 @@ Stiefel 多様体上の制約が保たれる．
 
 \subsection{アルゴリズム}
 
-以上を組み合わせることで，
-Stiefel 多様体上の勾配降下法が次のように得られる．
+以上を総括する．
+定義1.1の線形変換モデル $f_W(x)=W^\top x$ において，
+重み行列 $W$ を Stiefel 多様体 $\mathrm{St}(p,n)$ 上で最適化する．
+すなわち，損失関数 $L$ に対する制約付き最適化問題
+\[
+\min_{W\in\mathrm{St}(p,n)}\, L(W)
+\quad\text{s.t.}\quad
+f_W(x) = W^\top x,\quad W^\top W = I_p
+\]
+を勾配降下法により解く．
 
 学習率 $\eta>0$ とし，初期値 $W_0\in\mathrm{St}(p,n)$ を与える．
-各反復 $k=0,1,2,\ldots$ において：
+各反復 $k=0,1,2,\ldots$ において，以下の 3 段階で $W_k$ を更新する：
+\begin{enumerate}
+\item ユークリッド勾配の計算（定義1.2）：
 \[
-\begin{aligned}
-G_k &= \nabla L(W_k),\\
-\xi_k &= G_k - W_k\,\mathrm{sym}(W_k^\top G_k),\\
-W_{k+1} &= \mathrm{qf}(W_k - \eta\,\xi_k).
-\end{aligned}
+G_k = \nabla L(W_k).
 \]
+\item リーマン勾配への射影（命題2.5）：
+\[
+\xi_k = G_k - W_k\,\mathrm{sym}(W_k^\top G_k).
+\]
+\item QR レトラクションによる更新（定義2.6）：
+\[
+W_{k+1} = \mathrm{qf}(W_k - \eta\,\xi_k).
+\]
+\end{enumerate}
+ステップ 3 により $W_{k+1}\in\mathrm{St}(p,n)$ が保証され，
+すべての反復を通じて $f_{W_k}$ は直交性制約を満たす．
 
 \end{document}
