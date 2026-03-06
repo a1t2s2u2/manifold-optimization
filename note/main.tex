@@ -35,9 +35,12 @@
 \tableofcontents
 \newpage
 
-\section{深層学習における最適化問題}
+%% ==========================================================
+%%  第1節：ニューラルネットワーク
+%% ==========================================================
+\section{ニューラルネットワーク}
 
-本節では，以降の議論に必要な基本的枠組みを定める．
+\subsection{線形変換}
 
 \begin{definition}{線形変換モデル}{linear}
 $n,p\in\mathbb{N}$ とする．
@@ -50,12 +53,75 @@ f_W(x)=W^\top x
 によって定める．
 \end{definition}
 
-滑らかな関数 $L\colon\mathbb{R}^{n\times p}\to\mathbb{R}$ を損失関数と呼ぶ．これを最小化するような重み行列 $W$ を求めたい．
+\subsection{活性化関数}
+
+線形変換の合成は再び線形変換となるため，
+定義~\ref{def:linear}の線形変換を重ねてもモデルの表現力は向上しない．
+非線形な活性化関数を導入することでこの制限を克服する．
+
+\begin{definition}{活性化関数}{activation}
+関数 $\sigma\colon\mathbb{R}\to\mathbb{R}$ を活性化関数と呼ぶ．
+ベクトル $v=(v_1,\ldots,v_p)^\top\in\mathbb{R}^p$ に対し，
+$\sigma$ の要素ごとの適用を
+\[
+\sigma(v) = \bigl(\sigma(v_1),\,\ldots,\,\sigma(v_p)\bigr)^\top
+\]
+と書く．
+\end{definition}
+
+\begin{example}{代表的な活性化関数}{activation_examples}
+\leavevmode
+\begin{itemize}
+  \setlength{\itemsep}{2pt}
+  \item ReLU：$\sigma(t) = \max(0,\, t)$
+  \item シグモイド：$\sigma(t) = \dfrac{1}{1+e^{-t}}$
+  \item $\tanh$：$\sigma(t) = \tanh(t)$
+\end{itemize}
+\end{example}
+
+定義~\ref{def:linear}の線形変換モデルに活性化関数を適用すると，
+\[
+f_W(x) = \sigma(W^\top x)
+\]
+となる．$\sigma$ の非線形性により，
+$f_W$ は線形変換では表現できない関数を近似できるようになる．
+
+\subsection{多層ネットワーク}
+
+活性化関数を伴う線形変換を複数層重ねることで，
+より複雑な関数を表現できる．
+
+\begin{definition}{多層ネットワーク}{mlp}
+層数 $L\ge 2$ および各層の次元 $n_0,n_1,\ldots,n_L\in\mathbb{N}$ を与える．
+重み行列 $W_l\in\mathbb{R}^{n_{l-1}\times n_l}$（$l=1,\ldots,L$）に対し，
+入力 $x\in\mathbb{R}^{n_0}$ から出力への写像を
+\begin{align*}
+h_0 &= x, \\
+h_l &= \sigma(W_l^\top h_{l-1}) \qquad (l=1,\ldots,L-1), \\
+f(x) &= W_L^\top h_{L-1}
+\end{align*}
+によって定める．
+ここで $h_l\in\mathbb{R}^{n_l}$ は第 $l$ 層の中間表現であり，
+最終層には活性化関数を適用しない．
+\end{definition}
+
+\begin{remark}{}{mlp_special}
+$L=1$ かつ活性化関数を恒等写像とすれば，
+定義~\ref{def:linear}の線形変換モデル $f_W(x)=W^\top x$ に帰着する．
+\end{remark}
+
+各層の重み行列 $W_l$ に直交性制約 $W_l^\top W_l = I_{n_l}$ を課すことで，
+各層での変換のスケールを一定に保つことができる．
+本稿では以降，簡単のため単一の重み行列 $W\in\mathbb{R}^{n\times p}$
+に対する最適化を扱う．
+
+\subsection{損失関数}
+
+滑らかな関数 $L\colon\mathbb{R}^{n\times p}\to\mathbb{R}$ を損失関数と呼ぶ．
+これを最小化するような重み行列 $W$ を求めたい．
 \[
 \min_{W\in\mathbb{R}^{n\times p}}\, L(W)
 \]
-
-深層学習では，一般的に勾配降下法を用いてこの最適化問題を解く．
 
 \begin{definition}{ユークリッド勾配}{egrad}
 フロベニウス内積 $\langle A,B\rangle=\mathrm{tr}(A^\top B)$ に関して，
@@ -67,19 +133,12 @@ dL(W)[Z] = \langle \nabla L(W),\, Z \rangle
 $L$ の $W$ におけるユークリッド勾配と呼ぶ．
 \end{definition}
 
-\begin{definition}{勾配降下法}{gd}
-初期値 $W_0\in\mathbb{R}^{n\times p}$ および学習率 $\eta>0$ を与える．
-反復
-\[
-W_{k+1} = W_k - \eta\,\nabla L(W_k)
-\qquad (k=0,1,2,\ldots)
-\]
-を勾配降下法と呼ぶ．
-\end{definition}
+%% ==========================================================
+%%  第2節：Stiefel 多様体
+%% ==========================================================
+\section{Stiefel 多様体}
 
-\section{Stiefel 多様体上の最適化}
-
-本節では，重み行列 $W$ に直交性制約 $W^\top W=I_p$ を課した最適化問題を考える．
+重み行列 $W$ に直交性制約 $W^\top W=I_p$ を課すことを考える．
 この制約は $W$ の特異値がすべて $1$ であることと同値であり，
 $f_W$ による変換のスケールが一定に保たれる．
 
@@ -94,7 +153,7 @@ Stiefel 多様体 $\mathrm{St}(p,n)$ を
 によって定義する．
 \end{definition}
 
-この制約のもとで損失関数 $L$ に関する次の最適化問題を考える．
+この制約のもとで，本稿では次の最適化問題を考える．
 \[
 \min_{W\in\mathrm{St}(p,n)}\, L(W).
 \]
@@ -346,15 +405,36 @@ R_W(Z) = \mathrm{qf}(W+Z)
 は定義~\ref{def:retraction}の意味でレトラクションとなる．
 これを QR レトラクションと呼ぶ．
 
-\subsection{アルゴリズム}
+%% ==========================================================
+%%  第3節：アルゴリズム
+%% ==========================================================
+\section{アルゴリズム}
 
-以上の結果を組み合わせ，
-定義~\ref{def:linear}の線形変換モデル $f_W(x)=W^\top x$ に対する
+\subsection{勾配降下法}
+
+制約のない場合，損失関数 $L$ の最小化にはユークリッド勾配を用いた
+勾配降下法が基本的な手法となる．
+
+\begin{definition}{勾配降下法}{gd}
+初期値 $W_0\in\mathbb{R}^{n\times p}$ および学習率 $\eta>0$ を与える．
+反復
+\[
+W_{k+1} = W_k - \eta\,\nabla L(W_k)
+\qquad (k=0,1,2,\ldots)
+\]
+を勾配降下法と呼ぶ．
+\end{definition}
+
+しかし，勾配降下法では更新後の $W$ が $\mathrm{St}(p,n)$ 上に留まる保証がない．
+
+\subsection{リーマン勾配降下法}
+
+第2節で導入したリーマン勾配とレトラクションを組み合わせることで，
 Stiefel 多様体上の最適化問題
 \[
 \min_{W\in\mathrm{St}(p,n)}\, L(W)
 \]
-をリーマン勾配降下法により解く．
+を解くことができる．
 アルゴリズムを Algorithm~\ref{alg:rsgd} にまとめる．
 
 \begin{algorithm}{alg:rsgd}
