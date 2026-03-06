@@ -136,16 +136,24 @@ $T_W\mathrm{St}(p,n)=\ker dF(W)=\mathcal{T}$ が成り立つ．
 
 \subsection{リーマン勾配}
 
-\begin{proposition}{}{rgrad}
-ユークリッド勾配 $G=\nabla L(W)$ の
-$T_W\mathrm{St}(p,n)$ への直交射影は
+\begin{definition}{リーマン勾配}{rgrad}
+$W\in\mathrm{St}(p,n)$ において，
+\[
+dL(W)[Z] = \langle \mathrm{grad}\,L(W),\, Z \rangle
+\qquad (\forall\, Z\in T_W\mathrm{St}(p,n))
+\]
+を満たす $\mathrm{grad}\,L(W)\in T_W\mathrm{St}(p,n)$ を
+$L$ の $W$ におけるリーマン勾配と呼ぶ．
+\end{definition}
+
+\begin{proposition}{}{rgrad_formula}
+リーマン勾配は，ユークリッド勾配 $G=\nabla L(W)$ を用いて
 \[
 \mathrm{grad}\,L(W)
 =
 G - W\,\mathrm{sym}(W^\top G)
 \]
 で与えられる．ここで $\mathrm{sym}(A)=\tfrac{1}{2}(A+A^\top)$ である．
-これを $W$ におけるリーマン勾配と呼ぶ．
 \end{proposition}
 
 \begin{proof}
