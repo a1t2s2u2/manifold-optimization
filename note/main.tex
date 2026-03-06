@@ -142,6 +142,107 @@ dL(W)[Z] = \langle \mathrm{grad}\,L(W),\, Z \rangle
 $L$ の $W$ におけるリーマン勾配と呼ぶ．
 \end{definition}
 
+ユークリッド勾配 $\nabla L(W)$ は $\mathbb{R}^{n\times p}$ 全体における最急降下方向であるが，
+多様体上で動ける方向は接空間 $T_W\mathrm{St}(p,n)$ に限られる．
+ユークリッド勾配には接空間の法線方向の成分が含まれており，
+この成分は多様体上での $L$ の変化に寄与しない．
+リーマン勾配はユークリッド勾配から法線成分を除いたものであり，
+多様体上での正しい最急降下方向を与える．
+
+\begin{example}{}{rgrad_circle}
+$n=2,\, p=1$ の場合，$\mathrm{St}(1,2)$ は単位円 $S^1$ である．
+$L(w)=(w_1)^2$ とし，
+$a=\begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}\in S^1$
+における勾配を考える．各成分で偏微分すると，ユークリッド勾配は
+\[
+\nabla L(w)
+=\begin{pmatrix}\partial L/\partial w_1\\\partial L/\partial w_2\end{pmatrix}
+=\begin{pmatrix}2w_1\\0\end{pmatrix}
+\]
+であるから，$w=a$ では
+$\nabla L(a)=(\sqrt{2},\,0)^\top$ となる．
+$a$ における接空間は
+$T_{a} S^1 = \{z\in\mathbb{R}^2 \mid a^\top z = 0\}$
+であり，ユークリッド勾配 $\nabla L(a)$ は接空間に属さない．
+実際，$a^\top \nabla L(a) = \frac{1}{\sqrt{2}}\cdot\sqrt{2} = 1 \neq 0$ である．
+
+$\|a\|=1$ であるから，任意の $v\in\mathbb{R}^2$ は
+法線成分 $(a^\top v)\,a$ と接線成分 $v-(a^\top v)\,a$ に直交分解できる．
+$\nabla L(a)$ に適用すると，
+\[
+\underbrace{\begin{pmatrix}\sqrt{2}\\0\end{pmatrix}}_{\nabla L(a)}
+=
+\underbrace{\begin{pmatrix}1/\sqrt{2}\\-1/\sqrt{2}\end{pmatrix}}_{\text{接線成分}}
++
+\underbrace{\begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}}_{\text{法線成分}}
+\]
+となる．法線成分は円から離れる方向であり，
+円上での $L$ の変化に寄与しない．
+したがって，$-\nabla L(a)$ の方向に動くと円の外に出てしまい，
+円上における最急降下方向とはならない．
+
+一方，リーマン勾配は接線成分のみを取り出したものであり，
+\[
+\mathrm{grad}\,L(a)
+= \nabla L(a) - a\,(a^\top \nabla L(a))
+= \begin{pmatrix}\sqrt{2}\\0\end{pmatrix}
+  - \begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}
+= \begin{pmatrix}1/\sqrt{2}\\-1/\sqrt{2}\end{pmatrix}
+\]
+となる．これは円の接線方向を向いており，
+$-\mathrm{grad}\,L(a)$ の方向に進めば
+円上に沿って $L$ が減少する．
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=2.5]
+  % 単位円
+  \draw[thick] (0,0) circle[radius=1];
+  \node[above left] at (135:1.05) {$S^1$};
+
+  % 点 w
+  \fill ({1/sqrt(2)},{1/sqrt(2)}) circle[radius=1.2pt];
+  \node[above right] at ({1/sqrt(2)+0.03},{1/sqrt(2)+0.03}) {$a$};
+
+  % 原点
+  \fill (0,0) circle[radius=0.8pt];
+  \node[below left] at (0,0) {$O$};
+  \draw[dotted, gray] (0,0) -- ({1/sqrt(2)},{1/sqrt(2)});
+
+  % 接空間（接線）
+  \draw[dashed, gray]
+    ({1/sqrt(2)-0.5/sqrt(2)},{1/sqrt(2)+0.5/sqrt(2)})
+    -- ({1/sqrt(2)+0.7/sqrt(2)},{1/sqrt(2)-0.7/sqrt(2)});
+  \node[gray] at ({1/sqrt(2)+0.6/sqrt(2)+0.12},{1/sqrt(2)-0.6/sqrt(2)-0.1}) {$T_{a} S^1$};
+
+  % ユークリッド勾配（赤）
+  \draw[->, thick, red] ({1/sqrt(2)},{1/sqrt(2)}) -- ({1/sqrt(2)+0.7*sqrt(2)},{1/sqrt(2)});
+  \node[red, above] at ({1/sqrt(2)+0.5*sqrt(2)},{1/sqrt(2)+0.03}) {$\nabla L(a)$};
+
+  % 法線成分（灰色の矢印）
+  \draw[->, thick, gray!60] ({1/sqrt(2)},{1/sqrt(2)})
+    -- ({1/sqrt(2)+0.5/sqrt(2)},{1/sqrt(2)+0.5/sqrt(2)});
+  \node[gray!60, above left] at ({1/sqrt(2)+0.5/sqrt(2)},{1/sqrt(2)+0.5/sqrt(2)}) {法線成分};
+
+  % リーマン勾配（青）
+  \draw[->, thick, blue] ({1/sqrt(2)},{1/sqrt(2)})
+    -- ({1/sqrt(2)+0.5/sqrt(2)},{1/sqrt(2)-0.5/sqrt(2)});
+  \node[blue, right] at ({1/sqrt(2)+0.5/sqrt(2)+0.02},{1/sqrt(2)-0.5/sqrt(2)}) {$\mathrm{grad}\,L(a)$};
+\end{tikzpicture}
+\caption{単位円 $S^1$ 上の点 $a$ における勾配の分解．
+ユークリッド勾配（赤）は法線成分（灰）を含み，円上の最急降下方向とはならない．
+リーマン勾配（青）は接線成分のみであり，円上での正しい最急上昇方向を与える．}
+\end{figure}
+
+\begin{remark}{}{orthogonal_decomp}
+内積空間において，ノルム $1$ の元 $u$ が与えられたとき，
+任意の元 $v$ は法線成分 $\langle u,v\rangle\, u$ と
+接線成分 $v - \langle u,v\rangle\, u$ に直交分解できる．
+この分解はベクトルに限らず，
+フロベニウス内積を備えた行列空間など一般の内積空間で成り立つ．
+\end{remark}
+
 \begin{proposition}{}{rgrad_formula}
 リーマン勾配は，ユークリッド勾配 $G=\nabla L(W)$ を用いて
 \[
