@@ -2,6 +2,7 @@
 \documentclass[uplatex, dvipdfmx]{jsarticle}
 
 \usepackage{amsmath,amssymb,amsthm}
+\usepackage{tikz}
 \usepackage{tcolorbox}
 \tcbuselibrary{theorems}
 
@@ -149,7 +150,41 @@ $L$ の $W$ におけるリーマン勾配と呼ぶ．
 リーマン勾配はユークリッド勾配から法線成分を除いたものであり，
 多様体上での正しい最急降下方向を与える．
 
-\begin{example}{}{rgrad_circle}
+\begin{remark}{直交分解}{orthogonal_decomp}
+内積空間において，ノルム $1$ の元 $u$ が与えられたとき，
+任意の元 $v$ は法線成分 $\langle u,v\rangle\, u$ と
+接線成分 $v - \langle u,v\rangle\, u$ に直交分解できる．
+この分解はベクトルに限らず，
+フロベニウス内積を備えた行列空間など一般の内積空間で成り立つ．
+\end{remark}
+
+\begin{proposition}{リーマン勾配の計算}{rgrad_formula}
+リーマン勾配は，ユークリッド勾配 $G=\nabla L(W)$ を用いて
+\[
+\mathrm{grad}\,L(W)
+=
+G - W\,\mathrm{sym}(W^\top G)
+\]
+で与えられる．ここで $\mathrm{sym}(A)=\tfrac{1}{2}(A+A^\top)$ である．
+\end{proposition}
+
+\begin{proof}
+$G$ を接空間成分 $Z$ と法線成分 $WS$（$S$ は対称行列）に分解する：
+\[
+G=Z+WS.
+\]
+$W^\top W=I_p$ より $W^\top G = W^\top Z + S$ である．
+接空間条件 $W^\top Z + Z^\top W=0$ から
+$W^\top Z$ は歪対称であり，
+\[
+S
+= \mathrm{sym}(W^\top G)
+\]
+と定まる．
+したがって $Z=G-W\,\mathrm{sym}(W^\top G)$ を得る．
+\end{proof}
+
+\begin{example}{単位円上のリーマン勾配}{rgrad_circle}
 $n=2,\, p=1$ の場合，$\mathrm{St}(1,2)$ は単位円 $S^1$ である．
 $L(w)=(w_1)^2$ とし，
 $a=\begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}\in S^1$
@@ -166,8 +201,7 @@ $T_{a} S^1 = \{z\in\mathbb{R}^2 \mid a^\top z = 0\}$
 であり，ユークリッド勾配 $\nabla L(a)$ は接空間に属さない．
 実際，$a^\top \nabla L(a) = \frac{1}{\sqrt{2}}\cdot\sqrt{2} = 1 \neq 0$ である．
 
-$\|a\|=1$ であるから，任意の $v\in\mathbb{R}^2$ は
-法線成分 $(a^\top v)\,a$ と接線成分 $v-(a^\top v)\,a$ に直交分解できる．
+注意~\ref{rem:orthogonal_decomp}の直交分解を
 $\nabla L(a)$ に適用すると，
 \[
 \underbrace{\begin{pmatrix}\sqrt{2}\\0\end{pmatrix}}_{\nabla L(a)}
@@ -189,7 +223,8 @@ $\nabla L(a)$ に適用すると，
   - \begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}
 = \begin{pmatrix}1/\sqrt{2}\\-1/\sqrt{2}\end{pmatrix}
 \]
-となる．これは円の接線方向を向いており，
+となる．これは命題~\ref{prop:rgrad_formula}の公式
+$G - W\,\mathrm{sym}(W^\top G)$ において $p=1$ とした場合に一致する．
 $-\mathrm{grad}\,L(a)$ の方向に進めば
 円上に沿って $L$ が減少する．
 \end{example}
@@ -235,41 +270,25 @@ $-\mathrm{grad}\,L(a)$ の方向に進めば
 リーマン勾配（青）は接線成分のみであり，円上での正しい最急上昇方向を与える．}
 \end{figure}
 
-\begin{remark}{}{orthogonal_decomp}
-内積空間において，ノルム $1$ の元 $u$ が与えられたとき，
-任意の元 $v$ は法線成分 $\langle u,v\rangle\, u$ と
-接線成分 $v - \langle u,v\rangle\, u$ に直交分解できる．
-この分解はベクトルに限らず，
-フロベニウス内積を備えた行列空間など一般の内積空間で成り立つ．
-\end{remark}
-
-\begin{proposition}{}{rgrad_formula}
-リーマン勾配は，ユークリッド勾配 $G=\nabla L(W)$ を用いて
-\[
-\mathrm{grad}\,L(W)
-=
-G - W\,\mathrm{sym}(W^\top G)
-\]
-で与えられる．ここで $\mathrm{sym}(A)=\tfrac{1}{2}(A+A^\top)$ である．
-\end{proposition}
-
-\begin{proof}
-$G$ を接空間成分 $Z$ と法線成分 $WS$（$S$ は対称行列）に分解する：
-\[
-G=Z+WS.
-\]
-$W^\top W=I_p$ より $W^\top G = W^\top Z + S$ である．
-接空間条件 $W^\top Z + Z^\top W=0$ から
-$W^\top Z$ は歪対称であり，
-\[
-S
-= \mathrm{sym}(W^\top G)
-\]
-と定まる．
-したがって $Z=G-W\,\mathrm{sym}(W^\top G)$ を得る．
-\end{proof}
-
 \subsection{レトラクション}
+
+リーマン勾配の方向に $W$ を更新すると，
+$W - \eta\,\mathrm{grad}\,L(W)$ は一般に $\mathrm{St}(p,n)$ 上に留まらない．
+そこで，接空間上の更新を多様体上に引き戻す写像が必要となる．
+
+\begin{definition}{レトラクション}{retraction}
+多様体 $\mathcal{M}$ 上の点 $x$ において，
+滑らかな写像 $R_x\colon T_x\mathcal{M}\to\mathcal{M}$ が
+以下の 2 条件を満たすとき，$R$ をレトラクションと呼ぶ：
+\begin{enumerate}
+\item $R_x(0_x) = x$，
+\item $\displaystyle\frac{d}{dt}R_x(tZ)\bigg|_{t=0} = Z
+  \qquad (\forall\, Z\in T_x\mathcal{M})$．
+\end{enumerate}
+\end{definition}
+
+条件 1 はゼロ方向への更新が現在の点を保つことを，
+条件 2 は微小な更新が接ベクトルの方向に沿うことを要請する．
 
 \begin{definition}{QR 分解}{qr}
 $\mathrm{rank}(A)=p$ を満たす行列 $A\in\mathbb{R}^{n\times p}$ に対し，
@@ -308,22 +327,19 @@ $n=3,\, p=2$ の場合：
 \]
 \end{example}
 
-リーマン勾配の方向に $W$ を更新すると，
-$W - \eta\,\mathrm{grad}\,L(W)$ は一般に $\mathrm{St}(p,n)$ 上に留まらない．
 $\mathrm{qf}(A)\in\mathrm{St}(p,n)$ であるから，
 更新後の行列に QR 分解を適用することで多様体上に戻すことができる．
 すなわち，$W\in\mathrm{St}(p,n)$ および $Z\in T_W\mathrm{St}(p,n)$ に対し，
 \[
 R_W(Z) = \mathrm{qf}(W+Z)
 \]
-をレトラクションとして用いる．
-これにより，更新後の $R_W(Z)$ は $W^\top W = I_p$ を満たし，
-Stiefel 多様体上の制約が保たれる．
+は定義~\ref{def:retraction}の意味でレトラクションとなる．
+これを QR レトラクションと呼ぶ．
 
 \subsection{アルゴリズム}
 
 以上を総括する．
-定義1.1の線形変換モデル $f_W(x)=W^\top x$ において，
+定義~\ref{def:linear}の線形変換モデル $f_W(x)=W^\top x$ において，
 重み行列 $W$ を Stiefel 多様体 $\mathrm{St}(p,n)$ 上で最適化する．
 すなわち，損失関数 $L$ に対する制約付き最適化問題
 \[
@@ -336,15 +352,15 @@ f_W(x) = W^\top x,\quad W^\top W = I_p
 学習率 $\eta>0$ とし，初期値 $W_0\in\mathrm{St}(p,n)$ を与える．
 各反復 $k=0,1,2,\ldots$ において，以下の 3 段階で $W_k$ を更新する：
 \begin{enumerate}
-\item ユークリッド勾配の計算（定義1.2）：
+\item ユークリッド勾配の計算（定義~\ref{def:egrad}）：
 \[
 G_k = \nabla L(W_k).
 \]
-\item リーマン勾配への射影（命題2.5）：
+\item リーマン勾配への射影（命題~\ref{prop:rgrad_formula}）：
 \[
 \xi_k = G_k - W_k\,\mathrm{sym}(W_k^\top G_k).
 \]
-\item QR レトラクションによる更新（定義2.6）：
+\item QR レトラクションによる更新（定義~\ref{def:retraction}, \ref{def:qr}）：
 \[
 W_{k+1} = \mathrm{qf}(W_k - \eta\,\xi_k).
 \]
