@@ -14,6 +14,9 @@
 \newtcbtheorem[use counter from=definition]{remark}{注意}{
   colback=yellow!5, colframe=yellow!40!black, fonttitle=\bfseries
 }{rem}
+\newtcbtheorem[use counter from=definition]{example}{例}{
+  colback=gray!5, colframe=gray!50!black, fonttitle=\bfseries
+}{ex}
 \tcolorboxenvironment{proof}{
   colback=white, colframe=black!20,
   leftrule=2pt, rightrule=0pt, toprule=0pt, bottomrule=0pt
@@ -174,6 +177,43 @@ S
 
 \subsection{レトラクション}
 
+\begin{definition}{QR 分解}{qr}
+$\mathrm{rank}(A)=p$ を満たす行列 $A\in\mathbb{R}^{n\times p}$ に対し，
+\[
+A = QR,
+\qquad Q\in\mathrm{St}(p,n),\quad R\in\mathbb{R}^{p\times p}
+\]
+を満たす直交行列 $Q$ と上三角行列 $R$（対角成分が正）の組が一意に存在する．
+これを $A$ の QR 分解と呼び，$Q=\mathrm{qf}(A)$ と書く．
+\end{definition}
+
+\begin{example}{}{qr_example}
+$n=3,\, p=2$ の場合：
+\[
+\underbrace{
+\begin{pmatrix}
+1 & 1 \\
+1 & 0 \\
+0 & 1
+\end{pmatrix}
+}_{A}
+=
+\underbrace{
+\begin{pmatrix}
+\frac{1}{\sqrt{2}} & \frac{1}{\sqrt{6}} \\[4pt]
+\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{6}} \\[4pt]
+0 & \frac{2}{\sqrt{6}}
+\end{pmatrix}
+}_{Q=\mathrm{qf}(A)}
+\underbrace{
+\begin{pmatrix}
+\sqrt{2} & \frac{1}{\sqrt{2}} \\[4pt]
+0 & \frac{3}{\sqrt{6}}
+\end{pmatrix}
+}_{R}.
+\]
+\end{example}
+
 \begin{definition}{QR レトラクション}{retraction}
 $W\in\mathrm{St}(p,n)$ および $Z\in T_W\mathrm{St}(p,n)$ に対し，
 レトラクション $R_W\colon T_W\mathrm{St}(p,n)\to\mathrm{St}(p,n)$ を
@@ -181,7 +221,6 @@ $W\in\mathrm{St}(p,n)$ および $Z\in T_W\mathrm{St}(p,n)$ に対し，
 R_W(Z) = \mathrm{qf}(W+Z)
 \]
 によって定める．
-ここで $\mathrm{qf}$ は QR 分解における直交因子を表す．
 \end{definition}
 
 \subsection{アルゴリズム}
