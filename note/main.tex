@@ -59,12 +59,12 @@ W_{k+1} = W_k - \eta\,\nabla L(W_k)
 
 \section{Stiefel 多様体上の最適化}
 
-本節では，重み行列 $W$ に直交性制約を課した最適化問題を考える．
-$W$ の列ベクトルが正規直交系をなすことを要求することで，
-特徴量の冗長性を排除し，学習の安定性を高めることができる．
+本節では，重み行列 $W$ に直交性制約 $W^\top W=I_p$ を課した最適化問題を考える．
+この制約は $W$ の特異値がすべて $1$ であることと同値であり，
+$f_W$ による変換のスケールが一定に保たれる．
 
 \begin{definition}[Stiefel 多様体]
-$p\le n$ を満たす自然数 $n,p$ に対し，
+$p\le n$ を仮定する．
 Stiefel 多様体 $\mathrm{St}(p,n)$ を
 \[
 \mathrm{St}(p,n)
@@ -74,9 +74,7 @@ Stiefel 多様体 $\mathrm{St}(p,n)$ を
 によって定義する．
 \end{definition}
 
-本稿で扱う最適化問題は次で与えられる．
-
-\begin{definition}[制約付き最適化問題]
+\begin{definition}[Stiefel 制約付き最適化問題]
 \[
 \min_{W\in\mathrm{St}(p,n)}\, L(W).
 \]
@@ -105,10 +103,30 @@ W^\top Z + Z^\top W = 0
 \end{proposition}
 
 \begin{proof}
-$\mathrm{St}(p,n)$ 上の滑らかな曲線 $W(t)$ に対し，
-制約 $W(t)^\top W(t)=I_p$ を $t$ で微分すると
-$\dot W^\top W + W^\top\dot W=0$
-を得る．$Z=\dot W$ とおけば結論が従う．
+$\mathcal{T}=\{\, Z\in\mathbb{R}^{n\times p}\mid W^\top Z + Z^\top W = 0\,\}$ とおく．
+
+($T_W\mathrm{St}(p,n)\subset\mathcal{T}$)\\
+$\mathrm{St}(p,n)$ 上の滑らかな曲線 $W(t)$ が $W(0)=W$ を満たすとする．
+制約 $W(t)^\top W(t)=I_p$ の両辺を $t=0$ で微分すると
+$\dot W(0)^\top W + W^\top\dot W(0)=0$
+を得る．すなわち $\dot W(0)\in\mathcal{T}$ である．
+
+($\mathcal{T}\subset T_W\mathrm{St}(p,n)$)\\
+制約写像 $F\colon\mathbb{R}^{n\times p}\to\mathrm{Sym}(p)=\{\, S\in\mathbb{R}^{p\times p}\mid S=S^\top \,\}$ を
+$F(W)=W^\top W - I_p$ で定める．
+$F$ の微分は
+\[
+dF(W)[Z]=W^\top Z + Z^\top W
+\]
+で与えられる．任意の $S\in\mathrm{Sym}(p)$ に対し $Z=\tfrac{1}{2}WS$ とおくと
+\[
+dF(W)\bigl[\tfrac{1}{2}WS\bigr]
+= \tfrac{1}{2}(W^\top W S + S W^\top W)
+= S
+\]
+となるから，$dF(W)$ は全射である．
+したがって $\mathrm{St}(p,n)=F^{-1}(0)$ は正則値の逆像であり，
+$T_W\mathrm{St}(p,n)=\ker dF(W)=\mathcal{T}$ が成り立つ．
 \end{proof}
 
 \subsection{リーマン勾配}
