@@ -88,13 +88,6 @@ Stiefel 多様体 $\mathrm{St}(p,n)$ を
 \min_{W\in\mathrm{St}(p,n)}\, L(W).
 \]
 
-\begin{remark}{}{gremark}
-$\mathrm{St}(p,n)$ は $\mathbb{R}^{n\times p}$ の閉部分多様体であり，
-通常の勾配降下法による更新 $W-\eta\,\nabla L(W)$ は
-一般に $\mathrm{St}(p,n)$ 上に留まらない．
-したがって，多様体の幾何構造を考慮した最適化手法が必要となる．
-\end{remark}
-
 \subsection{接空間}
 
 \begin{proposition}{}{tangent}
@@ -214,14 +207,17 @@ $n=3,\, p=2$ の場合：
 \]
 \end{example}
 
-\begin{definition}{QR レトラクション}{retraction}
-$W\in\mathrm{St}(p,n)$ および $Z\in T_W\mathrm{St}(p,n)$ に対し，
-レトラクション $R_W\colon T_W\mathrm{St}(p,n)\to\mathrm{St}(p,n)$ を
+リーマン勾配の方向に $W$ を更新すると，
+$W - \eta\,\mathrm{grad}\,L(W)$ は一般に $\mathrm{St}(p,n)$ 上に留まらない．
+$\mathrm{qf}(A)\in\mathrm{St}(p,n)$ であるから，
+更新後の行列に QR 分解を適用することで多様体上に戻すことができる．
+すなわち，$W\in\mathrm{St}(p,n)$ および $Z\in T_W\mathrm{St}(p,n)$ に対し，
 \[
 R_W(Z) = \mathrm{qf}(W+Z)
 \]
-によって定める．
-\end{definition}
+をレトラクションとして用いる．
+これにより，更新後の $R_W(Z)$ は $W^\top W = I_p$ を満たし，
+Stiefel 多様体上の制約が保たれる．
 
 \subsection{アルゴリズム}
 
