@@ -5,3 +5,7 @@ data/
 .python-version
 
 results/
+
+# LaTeX output
+note/out/
+*.pdf
