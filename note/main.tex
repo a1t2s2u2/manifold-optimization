@@ -105,6 +105,59 @@ f(x) &= W_L^\top h_{L-1}
 最終層には活性化関数を適用しない．
 \end{definition}
 
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  neuron/.style={circle, draw, thick, minimum size=14pt, inner sep=0pt},
+  hidden/.style={neuron, fill=blue!10},
+]
+  \def\ls{2.3}
+
+  % Input layer (3 nodes)
+  \foreach \i in {1,2,3}
+    \node[neuron] (i\i) at (0, {2-\i}) {};
+
+  % Hidden layer 1 (4 nodes)
+  \foreach \i in {1,...,4}
+    \node[hidden] (a\i) at (\ls, {2.5-\i}) {};
+
+  % Hidden layer L-1 (4 nodes)
+  \foreach \i in {1,...,4}
+    \node[hidden] (b\i) at (3*\ls, {2.5-\i}) {};
+
+  % Output layer (2 nodes)
+  \foreach \i in {1,2}
+    \node[neuron] (o\i) at (4*\ls, {1.5-\i}) {};
+
+  % Connections: input -> hidden 1
+  \foreach \i in {1,2,3}
+    \foreach \j in {1,...,4}
+      \draw[-, gray!70] (i\i) -- (a\j);
+
+  % Connections: hidden L-1 -> output
+  \foreach \i in {1,...,4}
+    \foreach \j in {1,2}
+      \draw[-, gray!70] (b\i) -- (o\j);
+
+  % Dots between hidden layers
+  \node at (2*\ls, 0) {\large $\cdots$};
+
+  % Layer labels (below)
+  \node[below=4pt, font=\small] at (0, -1) {$h_0 = x$};
+  \node[below=4pt, font=\small] at (\ls, -1.5) {$h_1$};
+  \node[below=4pt, font=\small] at (3*\ls, -1.5) {$h_{L-1}$};
+  \node[below=4pt, font=\small] at (4*\ls, -0.5) {$f(x)$};
+
+  % Weight labels (above connections)
+  \node[font=\small] at (0.5*\ls, 1.7) {$W_1$};
+  \node[font=\small] at (3.5*\ls, 1.7) {$W_L$};
+
+\end{tikzpicture}
+\caption{多層ネットワークの構造．
+各層で線形変換 $W_l$ と活性化関数 $\sigma$ を適用する．
+最終層では活性化関数を適用しない．}
+\end{figure}
+
 \begin{remark}{}{mlp_special}
 $L=1$ かつ活性化関数を恒等写像とすれば，
 定義~\ref{def:linear}の線形変換モデル $f_W(x)=W^\top x$ に帰着する．
