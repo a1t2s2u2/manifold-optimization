@@ -5,41 +5,88 @@
 
 \newtheorem{definition}{定義}
 \newtheorem{proposition}{命題}
-\newtheorem{remark}{注意}
 
 \begin{document}
 
-\begin{definition}[問題設定]
-$n,p\in\mathbb{N}$ とする．$W\in\mathbb{R}^{n\times p}, x\in\mathbb{R}^{n}$ に対して
+\section{はじめに}
+
+深層学習（ディープラーニング）とは，
+データから規則性を自動的に学習する機械学習手法の一つである．
+本稿では，深層学習の基本的な枠組みを説明したのち，
+重み行列に直交性制約（Stiefel 多様体制約）を課す手法を導入する．
+
+\section{深層学習の基本}
+
+\subsection{線形変換と重み行列}
+
+$n$ 次元の入力データ $x\in\mathbb{R}^{n}$ を
+$p$ 次元の特徴量に変換することを考える．
+最も基本的な変換は，重み行列 $W\in\mathbb{R}^{n\times p}$ を用いた線形変換
 \[
 f_W(x)=W^\top x
 \]
-を定める．
-\end{definition}
+である．深層学習では，この $W$ をデータから自動的に学習する．
 
-\subsection{Stiefel 多様体上の最適化}
+\subsection{損失関数と最適化}
+
+学習の良さを測る関数を損失関数 $L(W)$ と呼ぶ．
+$L(W)$ の値が小さいほど，$W$ による変換がデータに適合していることを意味する．
+学習は，$L(W)$ を最小化する $W$ を求める最適化問題
+\[
+\min_{W}\, L(W)
+\]
+として定式化される．
+
+\subsection{勾配降下法}
+
+最適化の基本手法が勾配降下法である．
+ユークリッド勾配 $\nabla L(W)$ は，
+$W$ をどの方向に動かすと $L$ が最も増加するかを表す行列である．
+学習率 $\eta>0$ を用いて
+\[
+W \leftarrow W - \eta\,\nabla L(W)
+\]
+と繰り返し更新することで，$L(W)$ を減少させる．
+
+\section{Stiefel 多様体制約}
+
+\subsection{動機}
+
+通常の深層学習では $W$ に制約を課さないが，
+$W$ の列ベクトルが互いに直交し，かつ単位長であるという制約（直交性制約）を課すことで，
+特徴量の冗長性を排除し，学習の安定性を高めることができる．
+
+\subsection{Stiefel 多様体の定義}
 
 \begin{definition}[Stiefel 多様体]
-$n,p\in\mathbb{N}$ を $p\le n$ を満たす整数とする．
-実数体上の Stiefel 多様体 $\mathrm{St}(p,n)$ を
+$p\le n$ を満たす自然数 $n,p$ に対し，
+Stiefel 多様体 $\mathrm{St}(p,n)$ を
 \[
 \mathrm{St}(p,n)
 =
 \{\, W\in\mathbb{R}^{n\times p}\mid W^\top W = I_p \,\}
 \]
-によって定義する．
+で定義する．
+これは $W$ の列ベクトルが正規直交系をなすという条件である．
 \end{definition}
 
-$n,p\in\mathbb{N}$ とし，滑らかな関数 $L:\mathbb{R}^{n\times p}\to\mathbb{R}$ を与える．
-Stiefel 多様体上の最適化問題を
+直交性制約を課した最適化問題は
 \[
-\min_{W\in\mathrm{St}(p,n)} L(W)
+\min_{W\in\mathrm{St}(p,n)}\, L(W)
 \]
-と定める．
+となる．
 
-\paragraph{接空間}
+\section{Stiefel 多様体上の勾配降下法}
 
-\begin{proposition}[接空間の導出]
+Stiefel 多様体上では，通常の勾配降下法をそのまま適用すると
+$W$ が多様体から外れてしまう．
+そこで，(1) 勾配を多様体の接空間に射影し，
+(2) 更新後に多様体へ戻す，
+という 2 つの操作が必要になる．
+
+\subsection{接空間}
+
+\begin{proposition}[接空間]
 $W\in\mathrm{St}(p,n)$ における接空間は
 \[
 T_W\mathrm{St}(p,n)
@@ -53,142 +100,52 @@ W^\top Z + Z^\top W = 0
 \end{proposition}
 
 \begin{proof}
-制約関数 $F$ を
-\[
-F(W)=W^\top W-I_p
-\]
-とおく．
-曲線 $W(t)$ が $\mathrm{St}(p,n)$ 上にあるならば、$F(W(t))=0$ が成り立つ．
-これを $t$ で微分すると
-\[
-\frac{d}{dt}(W^\top W)
-=
-\dot W^\top W + W^\top \dot W = 0
-\]
-となる．
-$Z=\dot W$ とおけば，
-\[
-W^\top Z + Z^\top W =0
-\]
-を得る．
+制約 $W(t)^\top W(t)=I_p$ を $t$ で微分すると
+$\dot W^\top W + W^\top\dot W=0$ を得る．
+$Z=\dot W$ とおけば結論が従う．
 \end{proof}
 
-\paragraph{リーマン勾配}
+\subsection{リーマン勾配}
 
-\begin{definition}[ユークリッド勾配]
-$L:\mathbb{R}^{n\times p}\to\mathbb{R}$ を滑らかな関数とする．
-フロベニウス内積
-\[
-\langle A,B\rangle := \mathrm{tr}(A^\top B)
-\]
-に関して，
-\[
-dL(W)[Z]
-=
-\langle \nabla L(W), Z\rangle
-\qquad
-(Z\in\mathbb{R}^{n\times p})
-\]
-を満たす行列 $\nabla L(W)$ を
-ユークリッド勾配という．
-\end{definition}
-
-\begin{remark}
-フロベニウス内積は
-\[
-\langle A,B\rangle
-=
-\sum_{i=1}^{n}\sum_{j=1}^{p} A_{ij}B_{ij}
-\]
-で与えられ，
-行列をベクトルとみなしたときの通常の内積に対応する．
-\end{remark}
-
-\begin{remark}
-ユークリッド勾配 $\nabla L(W)$ は，
-$W$ をどの方向に動かすと
-$L$ が最も増加するかを表す行列である．
-\end{remark}
-
-\textbf{補足．}
-フロベニウス内積は，行列を成分ごとに掛けて足し合わせたものであり，
-$\mathbb{R}^{n\times p}$ を通常のユークリッド空間と同様に扱うための内積である．
-すなわち，ベクトルの場合の内積
-$\langle x,y\rangle=\sum_i x_i y_i$
-を行列に拡張したものとみなせる．
-また，$\mathrm{tr}(A^\top B)$ という形に書くことで，
-成分表示を用いずに簡潔に記述できる．
-
-\noindent
-ユークリッド勾配 $\nabla L(W)$ は，
-「$W$ をどの方向に動かすと $L$ が最も増加するか」
-を表す行列であり，
-通常の最急降下法では
-\[
-W \leftarrow W - \eta\,\nabla L(W)
-\]
-という更新に対応する．
-ただし Stiefel 多様体上では，
-この勾配をそのまま用いるのではなく，
-接空間への射影を通してリーマン勾配が定まる．
-
-
-$G$ を接空間へ射影したものを
-Stiefel 多様体上の勾配（リーマン勾配）と呼び，
+ユークリッド勾配 $G=\nabla L(W)$ を接空間へ射影したものを
+リーマン勾配と呼び，
 \[
 \mathrm{grad}\,L(W)
 =
 G - W\,\mathrm{sym}(W^\top G)
 \]
-で与えられる．
-ここで
-\[
-\mathrm{sym}(A)=\frac12(A+A^\top)
-\]
-である．
+で与えられる．ここで $\mathrm{sym}(A)=\tfrac{1}{2}(A+A^\top)$ である．
 
-\begin{proof}[射影公式]
-$G$ を接空間成分 $Z$ と法線成分 $WS$ に分解する：
-\[
-G=Z+WS.
-\]
-接空間条件 $W^\top Z+Z^\top W=0$ を満たすように
-対称行列 $S$ を求めると，
-\[
-S=\mathrm{sym}(W^\top G)
-\]
-となる．
-したがって
-\[
-Z=G-W\,\mathrm{sym}(W^\top G)
-\]
-を得る．
+\begin{proof}
+$G$ を接空間成分 $Z$ と法線成分 $WS$（$S$ は対称行列）に分解する：
+$G=Z+WS$．
+接空間条件から $S=\mathrm{sym}(W^\top G)$ が定まり，
+$Z=G-W\,\mathrm{sym}(W^\top G)$ を得る．
 \end{proof}
 
-\paragraph{更新則（Retract）}
-学習率 $\eta>0$ に対して，
-ユークリッド空間での更新
+\subsection{レトラクション}
+
+リーマン勾配による更新
+$\widetilde W = W - \eta\,\mathrm{grad}\,L(W)$
+は一般に $\mathrm{St}(p,n)$ 上に留まらない．
+QR 分解の直交因子 $\mathrm{qf}$ を用いて
 \[
-\widetilde W = W - \eta\,\mathrm{grad}\,L(W)
-\]
-は一般に Stiefel 多様体上に留まらない．
-そこで retraction を用いて
-\[
-W_{\text{new}}
+W_{\mathrm{new}}
 =
 \mathrm{qf}(\widetilde W)
 \]
-と定める．
-ここで $\mathrm{qf}$ は QR 分解の直交因子を表す．
+とすることで，多様体上に戻す．
 
-\paragraph{アルゴリズム}
+\subsection{アルゴリズムのまとめ}
+
 以上より，Stiefel 多様体上の勾配降下法は
 次の更新で与えられる：
 \[
 \begin{aligned}
 G &= \nabla L(W),\\
 G_R &= G - W\,\mathrm{sym}(W^\top G),\\
-W &\leftarrow \mathrm{qf}(W - \eta G_R).
+W &\leftarrow \mathrm{qf}(W - \eta\, G_R).
 \end{aligned}
 \]
+
 \end{document}
