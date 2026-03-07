@@ -446,18 +446,19 @@ W_2 =
 1 \\ 1
 \end{pmatrix}
 \]
-とし，訓練データ $x=(1,\,0)^\top$，$y=1$ に対する 1 回の更新を追う．
-
+とする．
 $W_1$ を固定し，$W_2=(w_1,\,w_2)^\top$ を変化させたときの
-損失関数を図~\ref{fig:xor_loss}に示す．
-この訓練データでは $h_1 = \mathrm{ReLU}(W_1^\top x) = (1,\,0)^\top$ であるから，
-$a_2 = W_2^\top h_1 = w_1$ となり，損失は
+損失関数（全訓練データの平均）を図~\ref{fig:xor_loss}に示す．
+$(0,0)^\top$ と $(1,1)^\top$ に対しては $h_1=0$ となり
+出力は常に $\sigma(0)=0.5$ であるから，損失は
 \[
 \mathcal{L}(w_1,w_2)
-= (\sigma(w_1)-1)^2
+= \frac{1}{4}\bigl[\,
+  0.5 + (\sigma(w_1)-1)^2 + (\sigma(w_2)-1)^2
+\,\bigr]
 \]
-と $w_1$ のみの関数になる．$w_1$ が大きいほど $\sigma(w_1)$ が $1$ に近づき，
-損失が減少する．
+と表される．$w_1,\,w_2$ が大きいほど $\sigma$ の出力が $1$ に近づき，
+損失が減少する様子が読み取れる．
 
 \begin{figure}[ht]
 \centering
@@ -472,7 +473,7 @@ $a_2 = W_2^\top h_1 = w_1$ となり，損失は
     y domain=-4:4,
     samples=35,
     z buffer=sort,
-    zmin=0, zmax=1,
+    zmin=0.12, zmax=0.65,
     colormap={bluered}{
       rgb255(0cm)=(0,50,150)
       rgb255(2cm)=(50,130,220)
@@ -481,62 +482,23 @@ $a_2 = W_2^\top h_1 = w_1$ となり，損失は
     },
 ]
 \addplot3[surf, opacity=0.85, shader=interp] {
-    (1/(1+exp(-x)) - 1)^2
+    0.25*(0.5 + (1/(1+exp(-x)) - 1)^2 + (1/(1+exp(-y)) - 1)^2)
 };
 \addplot3[only marks, mark=*, mark size=3pt, color=red,
     fill=red]
-    coordinates {(1, 1, 0.072)};
-% Gradient descent direction: -G_2 = (0.106, 0), scaled for visibility
-\addplot3[stealth-, white, very thick] coordinates {
-    (2.5, 1, 0.006) (1, 1, 0.072)
+    coordinates {(1, 1, 0.161)};
+\addplot3[-stealth, white, very thick] coordinates {
+    (1, 1, 0.161) (2.5, 2.5, 0.128)
 };
-\node[white, font=\small] at (axis cs:2.8, 1, 0.05) {$-G_2$};
+\node[white, font=\small] at (axis cs:2.8, 2.8, 0.14) {$-\bar{G}_2$};
 \end{axis}
 \end{tikzpicture}
-\caption{$W_1$ を固定し，訓練データ $(x,y)=((1,0)^\top,1)$ に対する
-損失関数 $\mathcal{L}=(\sigma(w_1)-1)^2$ の概形．
-$w_2$ には依存しない．赤点は初期値 $W_2=(1,1)^\top$．}
+\caption{$W_1$ を初期値に固定したときの，
+$W_2=(w_1,w_2)^\top$ に関する損失関数の概形．
+赤点は初期値 $W_2=(1,1)^\top$．}
 \label{fig:xor_loss}
 \end{figure}
 
-\begin{figure}[ht]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-    view={0}{90},
-    width=8cm, height=8cm,
-    xlabel={$w_1$},
-    ylabel={$w_2$},
-    domain=-4:4,
-    y domain=-4:4,
-    samples=35,
-    colormap={bluered}{
-      rgb255(0cm)=(0,50,150)
-      rgb255(2cm)=(50,130,220)
-      rgb255(4cm)=(200,80,80)
-      rgb255(5cm)=(220,50,50)
-    },
-    colorbar,
-    colorbar style={ylabel={$\mathcal{L}$}},
-    point meta min=0,
-    point meta max=1,
-]
-\addplot3[surf, shader=interp] {
-    (1/(1+exp(-x)) - 1)^2
-};
-\addplot3[only marks, mark=*, mark size=3pt, color=white,
-    fill=white]
-    coordinates {(1, 1, 0.072)};
-\addplot3[stealth-, white, very thick] coordinates {
-    (2.5, 1, 0.006) (1, 1, 0.072)
-};
-\node[white, font=\small] at (axis cs:3.0, 1, 0.006) {$-G_2$};
-\end{axis}
-\end{tikzpicture}
-\caption{図~\ref{fig:xor_loss}の上面図．
-白点は初期値 $W_2=(1,1)^\top$，矢印は勾配降下の方向 $-G_2$ を示す．}
-\label{fig:xor_loss_top}
-\end{figure}
 
 \textbf{1. 順伝播：}
 \begin{align*}
@@ -596,6 +558,26 @@ W_2 \gets W_2 - \eta\, G_2
 \]
 更新後の重み行列で同じ入力を順伝播すると $f(x)\approx 0.749$ となり，
 目標値 $y=1$ に近づいていることが確認できる．
+
+各データ点に対する $G_2 = h_1\,\delta_2^\top$ は次の通りである：
+\[
+\begin{array}{c|c|c|c}
+x^\top & y & h_1^\top & G_2^\top \\ \hline
+(0,\,0) & 0 & (0,\,0) & (0,\,0) \\
+(0,\,1) & 1 & (0,\,1) & (0,\,-0.106) \\
+(1,\,0) & 1 & (1,\,0) & (-0.106,\,0) \\
+(1,\,1) & 0 & (0,\,0) & (0,\,0)
+\end{array}
+\]
+$h_1=0$ のデータ点では勾配が $0$ となる．平均勾配は
+\[
+\bar{G}_2
+= \frac{1}{4}\sum_{i=1}^{4} G_2^{(i)}
+= \frac{1}{4}\begin{pmatrix}-0.106\\-0.106\end{pmatrix}
+\approx \begin{pmatrix}-0.0265\\-0.0265\end{pmatrix}
+\]
+であり，降下方向 $-\bar{G}_2$ は $(w_1,w_2)$ の両方が増加する対角方向を向く．
+図~\ref{fig:xor_loss}の矢印がこれに対応する．
 
 %% ==========================================================
 %%  第3節：多様体上の最適化
