@@ -204,17 +204,17 @@ $W_2\in\mathbb{R}^{4\times 1}$ である．
 
 \subsection{損失関数}
 
-滑らかな関数 $L\colon\mathbb{R}^{n\times p}\to\mathbb{R}$ を損失関数と呼ぶ．
+滑らかな関数 $\mathcal{L}\colon\mathbb{R}^{n\times p}\to\mathbb{R}$ を損失関数と呼ぶ．
 これを最小化するような重み行列 $W$ を求めたい．
 \[
-\min_{W\in\mathbb{R}^{n\times p}}\, L(W)
+\min_{W\in\mathbb{R}^{n\times p}}\, \mathcal{L}(W)
 \]
 
 \begin{example}{平均二乗誤差}{mse}
 訓練データ $\{(x_i,\, y_i)\}_{i=1}^{N}\subset\mathbb{R}^{n}\times\mathbb{R}^{p}$
 に対し，平均二乗誤差（MSE）を
 \[
-L(W) = \frac{1}{N}\sum_{i=1}^{N}\bigl\|f_W(x_i)-y_i\bigr\|^2
+\mathcal{L}(W) = \frac{1}{N}\sum_{i=1}^{N}\bigl\|f_W(x_i)-y_i\bigr\|^2
 \]
 によって定める．これは回帰問題における代表的な損失関数である．
 \end{example}
@@ -222,12 +222,45 @@ L(W) = \frac{1}{N}\sum_{i=1}^{N}\bigl\|f_W(x_i)-y_i\bigr\|^2
 \begin{definition}{ユークリッド勾配}{egrad}
 フロベニウス内積 $\langle A,B\rangle=\mathrm{tr}(A^\top B)$ に関して，
 \[
-dL(W)[Z] = \langle \nabla L(W),\, Z \rangle
+d\mathcal{L}(W)[Z] = \langle \nabla \mathcal{L}(W),\, Z \rangle
 \qquad (\forall\, Z\in\mathbb{R}^{n\times p})
 \]
-を満たす行列 $\nabla L(W)\in\mathbb{R}^{n\times p}$ を
-$L$ の $W$ におけるユークリッド勾配と呼ぶ．
+を満たす行列 $\nabla \mathcal{L}(W)\in\mathbb{R}^{n\times p}$ を
+$\mathcal{L}$ の $W$ におけるユークリッド勾配と呼ぶ．
 \end{definition}
+
+\subsection{誤差逆伝播法}
+
+多層ネットワーク $f=\ell_{W_L}\circ\cdots\circ\ell_{W_1}$ において，
+各重み行列 $W_l$ に関する偏微分 $\partial\mathcal{L}/\partial W_l$ を
+連鎖律により計算する方法を述べる．
+
+$a_l=W_l^\top h_{l-1}$ とおくと $h_l=\sigma(a_l)$ であるから，
+合成関数の微分の連鎖が次のように整理される．
+
+\begin{proposition}{誤差逆伝播法}{backprop}
+訓練データ $(x,y)$ に対する損失を $\mathcal{L}=c(h_L,\,y)$ とする（$c$ はコスト関数）．
+$\delta_l = \dfrac{\partial\mathcal{L}}{\partial a_l}\in\mathbb{R}^{n_l}$ とおくと，
+連鎖律から
+\[
+\delta_L = \sigma'(a_L)\odot\frac{\partial\mathcal{L}}{\partial h_L},
+\qquad
+\delta_l = \sigma'(a_l)\odot(W_{l+1}\,\delta_{l+1})
+\quad (l=L{-}1,\ldots,1)
+\]
+が成り立つ．ここで $\odot$ は要素ごとの積である．
+さらに，$a_l=W_l^\top h_{l-1}$ の微分から
+\[
+\frac{\partial\mathcal{L}}{\partial W_l} = h_{l-1}\,\delta_l^\top
+\in\mathbb{R}^{n_{l-1}\times n_l}
+\qquad (l=1,\ldots,L)
+\]
+を得る．
+\end{proposition}
+
+$l=L$ から $l=1$ へ逆向きに $\delta_l$ を計算することで，
+全ての $\partial\mathcal{L}/\partial W_l$ が得られる．
+計算量は順伝播と同程度であり，層数 $L$ に対して線形である．
 
 %% ==========================================================
 %%  第2節：Stiefel 多様体
@@ -251,7 +284,7 @@ Stiefel 多様体 $\mathrm{St}(p,n)$ を
 
 この制約のもとで，本稿では次の最適化問題を考える．
 \[
-\min_{W\in\mathrm{St}(p,n)}\, L(W).
+\min_{W\in\mathrm{St}(p,n)}\, \mathcal{L}(W).
 \]
 
 \subsection{接空間}
@@ -301,17 +334,17 @@ $T_W\mathrm{St}(p,n)=\ker dF(W)=\mathcal{T}$ が成り立つ．
 \begin{definition}{リーマン勾配}{rgrad}
 $W\in\mathrm{St}(p,n)$ において，
 \[
-dL(W)[Z] = \langle \mathrm{grad}\,L(W),\, Z \rangle
+d\mathcal{L}(W)[Z] = \langle \mathrm{grad}\,\mathcal{L}(W),\, Z \rangle
 \qquad (\forall\, Z\in T_W\mathrm{St}(p,n))
 \]
-を満たす $\mathrm{grad}\,L(W)\in T_W\mathrm{St}(p,n)$ を
-$L$ の $W$ におけるリーマン勾配と呼ぶ．
+を満たす $\mathrm{grad}\,\mathcal{L}(W)\in T_W\mathrm{St}(p,n)$ を
+$\mathcal{L}$ の $W$ におけるリーマン勾配と呼ぶ．
 \end{definition}
 
-ユークリッド勾配 $\nabla L(W)$ は $\mathbb{R}^{n\times p}$ 全体における最急降下方向であるが，
+ユークリッド勾配 $\nabla \mathcal{L}(W)$ は $\mathbb{R}^{n\times p}$ 全体における最急降下方向であるが，
 多様体上で動ける方向は接空間 $T_W\mathrm{St}(p,n)$ に限られる．
 ユークリッド勾配には接空間の法線方向の成分が含まれており，
-この成分は多様体上での $L$ の変化に寄与しない．
+この成分は多様体上での $\mathcal{L}$ の変化に寄与しない．
 リーマン勾配はユークリッド勾配から法線成分を除いたものであり，
 多様体上での正しい最急降下方向を与える．
 
@@ -324,9 +357,9 @@ $L$ の $W$ におけるリーマン勾配と呼ぶ．
 \end{remark}
 
 \begin{proposition}{リーマン勾配の計算}{rgrad_formula}
-リーマン勾配は，ユークリッド勾配 $G=\nabla L(W)$ を用いて
+リーマン勾配は，ユークリッド勾配 $G=\nabla \mathcal{L}(W)$ を用いて
 \[
-\mathrm{grad}\,L(W)
+\mathrm{grad}\,\mathcal{L}(W)
 =
 G - W\,\mathrm{sym}(W^\top G)
 \]
@@ -351,47 +384,47 @@ S
 
 \begin{example}{単位円上のリーマン勾配}{rgrad_circle}
 $n=2,\, p=1$ の場合，$\mathrm{St}(1,2)$ は単位円 $S^1$ である．
-$L(w)=(w_1)^2$ とし，
+$\mathcal{L}(w)=(w_1)^2$ とし，
 $a=\begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}\in S^1$
 における勾配を考える．各成分で偏微分すると，ユークリッド勾配は
 \[
-\nabla L(w)
-=\begin{pmatrix}\partial L/\partial w_1\\\partial L/\partial w_2\end{pmatrix}
+\nabla \mathcal{L}(w)
+=\begin{pmatrix}\partial \mathcal{L}/\partial w_1\\\partial \mathcal{L}/\partial w_2\end{pmatrix}
 =\begin{pmatrix}2w_1\\0\end{pmatrix}
 \]
 であるから，$w=a$ では
-$\nabla L(a)=(\sqrt{2},\,0)^\top$ となる．
+$\nabla \mathcal{L}(a)=(\sqrt{2},\,0)^\top$ となる．
 $a$ における接空間は
 $T_{a} S^1 = \{z\in\mathbb{R}^2 \mid a^\top z = 0\}$
-であり，ユークリッド勾配 $\nabla L(a)$ は接空間に属さない．
-実際，$a^\top \nabla L(a) = \frac{1}{\sqrt{2}}\cdot\sqrt{2} = 1 \neq 0$ である．
+であり，ユークリッド勾配 $\nabla \mathcal{L}(a)$ は接空間に属さない．
+実際，$a^\top \nabla \mathcal{L}(a) = \frac{1}{\sqrt{2}}\cdot\sqrt{2} = 1 \neq 0$ である．
 
 注意~\ref{rem:orthogonal_decomp}の直交分解を
-$\nabla L(a)$ に適用すると，
+$\nabla \mathcal{L}(a)$ に適用すると，
 \[
-\underbrace{\begin{pmatrix}\sqrt{2}\\0\end{pmatrix}}_{\nabla L(a)}
+\underbrace{\begin{pmatrix}\sqrt{2}\\0\end{pmatrix}}_{\nabla \mathcal{L}(a)}
 =
 \underbrace{\begin{pmatrix}1/\sqrt{2}\\-1/\sqrt{2}\end{pmatrix}}_{\text{接線成分}}
 +
 \underbrace{\begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}}_{\text{法線成分}}
 \]
 となる．法線成分は円から離れる方向であり，
-円上での $L$ の変化に寄与しない．
-したがって，$-\nabla L(a)$ の方向に動くと円の外に出てしまい，
+円上での $\mathcal{L}$ の変化に寄与しない．
+したがって，$-\nabla \mathcal{L}(a)$ の方向に動くと円の外に出てしまい，
 円上における最急降下方向とはならない．
 
 一方，リーマン勾配は接線成分のみを取り出したものであり，
 \[
-\mathrm{grad}\,L(a)
-= \nabla L(a) - a\,(a^\top \nabla L(a))
+\mathrm{grad}\,\mathcal{L}(a)
+= \nabla \mathcal{L}(a) - a\,(a^\top \nabla \mathcal{L}(a))
 = \begin{pmatrix}\sqrt{2}\\0\end{pmatrix}
   - \begin{pmatrix}1/\sqrt{2}\\1/\sqrt{2}\end{pmatrix}
 = \begin{pmatrix}1/\sqrt{2}\\-1/\sqrt{2}\end{pmatrix}
 \]
 となる．これは命題~\ref{prop:rgrad_formula}の公式
 $G - W\,\mathrm{sym}(W^\top G)$ において $p=1$ とした場合に一致する．
-$-\mathrm{grad}\,L(a)$ の方向に進めば
-円上に沿って $L$ が減少する．
+$-\mathrm{grad}\,\mathcal{L}(a)$ の方向に進めば
+円上に沿って $\mathcal{L}$ が減少する．
 \end{example}
 
 \begin{figure}[h]
@@ -418,7 +451,7 @@ $-\mathrm{grad}\,L(a)$ の方向に進めば
 
   % ユークリッド勾配（赤）
   \draw[->, thick, red] ({1/sqrt(2)},{1/sqrt(2)}) -- ({1/sqrt(2)+0.7*sqrt(2)},{1/sqrt(2)});
-  \node[red, above] at ({1/sqrt(2)+0.5*sqrt(2)},{1/sqrt(2)+0.03}) {$\nabla L(a)$};
+  \node[red, above] at ({1/sqrt(2)+0.5*sqrt(2)},{1/sqrt(2)+0.03}) {$\nabla \mathcal{L}(a)$};
 
   % 法線成分（灰色の矢印）
   \draw[->, thick, gray!60] ({1/sqrt(2)},{1/sqrt(2)})
@@ -428,7 +461,7 @@ $-\mathrm{grad}\,L(a)$ の方向に進めば
   % リーマン勾配（青）
   \draw[->, thick, blue] ({1/sqrt(2)},{1/sqrt(2)})
     -- ({1/sqrt(2)+0.5/sqrt(2)},{1/sqrt(2)-0.5/sqrt(2)});
-  \node[blue, right] at ({1/sqrt(2)+0.5/sqrt(2)+0.02},{1/sqrt(2)-0.5/sqrt(2)}) {$\mathrm{grad}\,L(a)$};
+  \node[blue, right] at ({1/sqrt(2)+0.5/sqrt(2)+0.02},{1/sqrt(2)-0.5/sqrt(2)}) {$\mathrm{grad}\,\mathcal{L}(a)$};
 \end{tikzpicture}
 \caption{単位円 $S^1$ 上の点 $a$ における勾配の分解．
 ユークリッド勾配（赤）は法線成分（灰）を含み，円上の最急降下方向とはならない．
@@ -438,7 +471,7 @@ $-\mathrm{grad}\,L(a)$ の方向に進めば
 \subsection{レトラクション}
 
 リーマン勾配の方向に $W$ を更新すると，
-$W - \eta\,\mathrm{grad}\,L(W)$ は一般に $\mathrm{St}(p,n)$ 上に留まらない．
+$W - \eta\,\mathrm{grad}\,\mathcal{L}(W)$ は一般に $\mathrm{St}(p,n)$ 上に留まらない．
 そこで，接空間上の更新を多様体上に引き戻す写像が必要となる．
 
 \begin{definition}{レトラクション}{retraction}
@@ -508,14 +541,14 @@ R_W(Z) = \mathrm{qf}(W+Z)
 
 \subsection{勾配降下法}
 
-制約のない場合，損失関数 $L$ の最小化にはユークリッド勾配を用いた
+制約のない場合，損失関数 $\mathcal{L}$ の最小化にはユークリッド勾配を用いた
 勾配降下法が基本的な手法となる．
 
 \begin{definition}{勾配降下法}{gd}
 初期値 $W_0\in\mathbb{R}^{n\times p}$ および学習率 $\eta>0$ を与える．
 反復
 \[
-W_{k+1} = W_k - \eta\,\nabla L(W_k)
+W_{k+1} = W_k - \eta\,\nabla \mathcal{L}(W_k)
 \qquad (k=0,1,2,\ldots)
 \]
 を勾配降下法と呼ぶ．
@@ -528,18 +561,18 @@ W_{k+1} = W_k - \eta\,\nabla L(W_k)
 第2節で導入したリーマン勾配とレトラクションを組み合わせることで，
 Stiefel 多様体上の最適化問題
 \[
-\min_{W\in\mathrm{St}(p,n)}\, L(W)
+\min_{W\in\mathrm{St}(p,n)}\, \mathcal{L}(W)
 \]
 を解くことができる．
 アルゴリズムを Algorithm~\ref{alg:rsgd} にまとめる．
 
 \begin{algorithm}{alg:rsgd}
 \textbf{Stiefel 多様体上のリーマン勾配降下法} \\[4pt]
-\textbf{Input:} 損失関数 $L$，学習率 $\eta > 0$，初期値 $W_0 \in \mathrm{St}(p,n)$ \\[4pt]
+\textbf{Input:} 損失関数 $\mathcal{L}$，学習率 $\eta > 0$，初期値 $W_0 \in \mathrm{St}(p,n)$ \\[4pt]
 \textbf{for} $k = 0, 1, 2, \ldots$ \textbf{do}
 \begin{enumerate}
   \setlength{\itemsep}{2pt}
-  \item $G_k \gets \nabla L(W_k)$
+  \item $G_k \gets \nabla \mathcal{L}(W_k)$
     \hfill $\triangleright$ ユークリッド勾配（定義~\ref{def:egrad}）
   \item $\xi_k \gets G_k - W_k\,\mathrm{sym}(W_k^\top G_k)$
     \hfill $\triangleright$ リーマン勾配（命題~\ref{prop:rgrad_formula}）
