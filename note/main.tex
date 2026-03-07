@@ -86,9 +86,9 @@ $\sigma$ の要素ごとの適用を
 
 \begin{definition}{層}{layer}
 重み行列 $W\in\mathbb{R}^{m\times n}$ および活性化関数 $\sigma$ に対し，
-写像 $\ell_W\colon\mathbb{R}^{m}\to\mathbb{R}^{n}$ を
+写像 $\phi_W\colon\mathbb{R}^{m}\to\mathbb{R}^{n}$ を
 \[
-\ell_W(x) = \sigma(W^\top x)
+\phi_W(x) = \sigma(W^\top x)
 \]
 によって定める．これを層と呼ぶ．
 \end{definition}
@@ -99,15 +99,15 @@ $\sigma$ の要素ごとの適用を
 
 \begin{definition}{多層ネットワーク}{mlp}
 層の数 $L\ge 1$ および各層の次元 $n_0,n_1,\ldots,n_L\in\mathbb{N}$ を与える．
-$L$ 個の層 $\ell_{W_l}\colon\mathbb{R}^{n_{l-1}}\to\mathbb{R}^{n_l}$（$l=1,\ldots,L$）
-に対し，多層ネットワークを層の合成写像
+各層 $\phi_{W_l}\colon\mathbb{R}^{n_{l-1}}\to\mathbb{R}^{n_l}$（$l=1,\ldots,L$）
+の合成写像
 \[
-f = \ell_{W_L}\circ\cdots\circ\ell_{W_1}
+f = \phi_{W_L}\circ\cdots\circ\phi_{W_1}
 \colon\mathbb{R}^{n_0}\to\mathbb{R}^{n_L}
 \]
-によって定める．すなわち，$h_0=x$ として
+を多層ネットワークと呼ぶ．すなわち，$h_0=x$ として
 \[
-h_l = \ell_{W_l}(h_{l-1}) = \sigma(W_l^\top h_{l-1})
+h_l = \phi_{W_l}(h_{l-1}) = \sigma_l(W_l^\top h_{l-1})
 \qquad (l=1,\ldots,L)
 \]
 と逐次的に計算し，$f(x)=h_L$ を出力とする．
@@ -167,30 +167,13 @@ h_l = \ell_{W_l}(h_{l-1}) = \sigma(W_l^\top h_{l-1})
   \node[font=\small] at (4*\ls, -1.0) {$h_L = f(x)$};
 
   % Weight labels (above braces)
-  \node[font=\small, blue!70!black] at (0.5*\ls, 2.7) {$\ell_{W_1}$};
-  \node[font=\small, blue!70!black] at (3.5*\ls, 2.7) {$\ell_{W_L}$};
+  \node[font=\small, blue!70!black] at (0.5*\ls, 2.7) {$\phi_{W_1}$};
+  \node[font=\small, blue!70!black] at (3.5*\ls, 2.7) {$\phi_{W_L}$};
 
 \end{tikzpicture}
 \caption{多層ネットワークの構造．
-各層で $\ell_{W_l}=\sigma\circ W_l^\top$ を適用し，$f(x)=h_L$ を出力とする．}
+各層で $h_l=\phi_{W_l}(h_{l-1})$ を計算し，$f(x)=h_L$ を出力とする．}
 \end{figure}
-
-\begin{example}{$L=2$（ReLU + シグモイド）}{two_layer}
-$n_0=3,\, n_1=4,\, n_2=1$ とする．
-第 1 層に ReLU，第 2 層にシグモイドを用いると，
-入力 $x\in\mathbb{R}^3$ に対し
-\[
-\left\{
-\begin{array}{c@{\;=\;}l}
-h_1 & \ell_{W_1}(x) = \mathrm{ReLU}(W_1^\top x) \in \mathbb{R}^4, \\
-h_2 & \ell_{W_2}(h_1) = \mathrm{sigmoid}(W_2^\top h_1) \in \mathbb{R}
-\end{array}
-\right.
-\]
-となり，$f(x)=h_2$ を出力とする．
-ここで $W_1\in\mathbb{R}^{3\times 4}$，
-$W_2\in\mathbb{R}^{4\times 1}$ である．
-\end{example}
 
 %% ==========================================================
 %%  第2節：損失関数と勾配降下法
@@ -261,7 +244,7 @@ W_{k+1} = W_k - \eta\,\nabla \mathcal{L}(W_k)
 多層ネットワークでは重み行列が $L$ 個存在し，各 $W_l$ に関する勾配を個別に計算する必要がある．
 連鎖律を用いることで，出力層から入力層へ向かって効率的にすべての勾配を計算できる．
 
-多層ネットワーク $f=\ell_{W_L}\circ\cdots\circ\ell_{W_1}$ において，
+多層ネットワーク（定義~\ref{def:mlp}）において，
 各重み行列 $W_l$ に関する偏微分 $\partial\mathcal{L}/\partial W_l$ を
 連鎖律により計算する方法を述べる．
 
@@ -279,7 +262,15 @@ $\delta_l = \dfrac{\partial\mathcal{L}}{\partial a_l}\in\mathbb{R}^{n_l}$ とお
 \quad (l=L{-}1,\ldots,1)
 \]
 が成り立つ．ここで $\odot$ は要素ごとの積である．
-さらに，$a_l=W_l^\top h_{l-1}$ の微分から
+さらに，$(a_l)_j = \sum_i (W_l)_{ij}\,(h_{l-1})_i$ であるから，
+$\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
+連鎖律より
+\[
+\frac{\partial\mathcal{L}}{\partial (W_l)_{ij}}
+= (h_{l-1})_i\,(\delta_l)_j.
+\]
+これを行列としてまとめると，列ベクトル $h_{l-1}\in\mathbb{R}^{n_{l-1}}$ と
+行ベクトル $\delta_l^\top\in\mathbb{R}^{1\times n_l}$ の外積
 \[
 \frac{\partial\mathcal{L}}{\partial W_l} = h_{l-1}\,\delta_l^\top
 \in\mathbb{R}^{n_{l-1}\times n_l}
@@ -291,6 +282,137 @@ $\delta_l = \dfrac{\partial\mathcal{L}}{\partial a_l}\in\mathbb{R}^{n_l}$ とお
 $l=L$ から $l=1$ へ逆向きに $\delta_l$ を計算することで，
 全ての $\partial\mathcal{L}/\partial W_l$ が得られる．
 計算量は順伝播と同程度であり，層数 $L$ に対して線形である．
+
+\subsection{具体例：XOR ゲートの学習}
+
+本節の内容を具体例で確認する．
+XOR は 2 つの入力が異なるときに $1$，同じときに $0$ を返す論理演算であり，
+訓練データは次の通りである：
+\[
+\begin{array}{c|c}
+x^\top & y \\ \hline
+(0,\,0) & 0 \\
+(0,\,1) & 1 \\
+(1,\,0) & 1 \\
+(1,\,1) & 0
+\end{array}
+\]
+$n_0=2,\, n_1=2,\, n_2=1$，
+第 1 層に ReLU，第 2 層にシグモイドを用い，
+コスト関数を $c(\hat{y},y)=(\hat{y}-y)^2$ とする．
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  neuron/.style={circle, draw, thick, minimum size=14pt, inner sep=0pt},
+  hidden/.style={neuron},
+]
+  \def\ls{2.3}
+
+  % Input layer (2 nodes)
+  \foreach \i in {1,2}
+    \node[neuron] (i\i) at (0, {1.5-\i}) {};
+
+  % Hidden layer (2 nodes)
+  \foreach \i in {1,2}
+    \node[hidden] (h\i) at (\ls, {1.5-\i}) {};
+
+  % Output layer (1 node)
+  \node[hidden] (o1) at (2*\ls, 0) {};
+
+  % Connections: input -> hidden
+  \foreach \i in {1,2}
+    \foreach \j in {1,2}
+      \draw[-, blue!40] (i\i) -- (h\j);
+
+  % Connections: hidden -> output
+  \foreach \i in {1,2}
+    \draw[-, blue!40] (h\i) -- (o1);
+
+  % Dimension braces (above each layer)
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    (-0.4, 1.05) -- (0.4, 1.05) node[midway, above=5pt, font=\scriptsize] {$n_0=2$};
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    ({\ls-0.4}, 1.05) -- ({\ls+0.4}, 1.05) node[midway, above=5pt, font=\scriptsize] {$n_1=2$};
+  \draw[decorate, decoration={brace, amplitude=4pt}, gray]
+    ({2*\ls-0.4}, 0.55) -- ({2*\ls+0.4}, 0.55) node[midway, above=5pt, font=\scriptsize] {$n_2=1$};
+
+  % Layer labels (below each layer)
+  \node[font=\small] at (0, -1.0) {$h_0 = x$};
+  \node[font=\small] at (\ls, -1.0) {$h_1$};
+  \node[font=\small] at (2*\ls, -0.7) {$h_2 = f(x)$};
+
+  % Weight labels
+  \node[font=\small, blue!70!black] at (0.5*\ls, 1.8) {$\phi_{W_1}$};
+  \node[font=\small, blue!70!black] at (1.5*\ls, 1.5) {$\phi_{W_2}$};
+
+\end{tikzpicture}
+\caption{XOR を学習するネットワークの構造（$L=2$）．}
+\end{figure}
+重み行列の初期値を
+\[
+W_1 =
+\begin{pmatrix}
+1 & -1 \\
+-1 & 1
+\end{pmatrix},\quad
+W_2 =
+\begin{pmatrix}
+1 \\ 1
+\end{pmatrix}
+\]
+とし，訓練データ $x=(1,\,0)^\top$，$y=1$ に対する 1 回の更新を追う．
+
+\textbf{1. 順伝播：}
+\begin{align*}
+h_1 &= \mathrm{ReLU}(W_1^\top x)
+= \mathrm{ReLU}\begin{pmatrix}1\\-1\end{pmatrix}
+= \begin{pmatrix}1\\0\end{pmatrix}, \\[4pt]
+h_2 &= \mathrm{sigmoid}(W_2^\top h_1)
+= \mathrm{sigmoid}(1)
+= \frac{1}{1+e^{-1}}
+\approx 0.731.
+\end{align*}
+
+\textbf{2. 損失の計算：}
+\[
+\mathcal{L} = (h_2 - y)^2 = (0.731 - 1)^2 \approx 0.072.
+\]
+
+\textbf{3. 誤差逆伝播：}
+活性化関数に入る前の値 $a_l = W_l^\top h_{l-1}$ に関する
+損失の偏微分 $\delta_l = \partial\mathcal{L}/\partial a_l$ を，
+出力層から逆向きに計算する：
+\begin{align*}
+\delta_2
+&= \mathrm{sigmoid}'(a_2)\cdot 2(h_2-y)
+= h_2(1-h_2)\cdot 2(h_2-1)
+\approx 0.197 \times (-0.538)
+\approx -0.106, \\[4pt]
+\delta_1
+&= \mathrm{ReLU}'(a_1)\odot(W_2\,\delta_2)
+= \begin{pmatrix}1\\0\end{pmatrix}\odot\begin{pmatrix}-0.106\\-0.106\end{pmatrix}
+= \begin{pmatrix}-0.106\\0\end{pmatrix}.
+\end{align*}
+これより，各層のユークリッド勾配は
+\[
+G_1 = h_0\,\delta_1^\top
+= \begin{pmatrix}1\\0\end{pmatrix}\begin{pmatrix}-0.106 & 0\end{pmatrix}
+= \begin{pmatrix}-0.106 & 0\\0 & 0\end{pmatrix},\quad
+G_2 = h_1\,\delta_2^\top
+= \begin{pmatrix}1\\0\end{pmatrix}(-0.106)
+= \begin{pmatrix}-0.106\\0\end{pmatrix}.
+\]
+
+\textbf{4. 勾配降下（$\eta=1.0$）：}
+\[
+W_1 \gets W_1 - \eta\, G_1
+= \begin{pmatrix}1.106 & -1\\-1 & 1\end{pmatrix},\quad
+W_2 \gets W_2 - \eta\, G_2
+= \begin{pmatrix}1.106\\1\end{pmatrix}.
+\]
+更新後の重み行列で同じ入力を順伝播すると $f(x)\approx 0.749$ となり，
+目標値 $y=1$ に近づいていることが確認できる．
 
 %% ==========================================================
 %%  第3節：多様体上の最適化
@@ -667,7 +789,7 @@ R_W(Z) = \mathrm{qf}(W+Z)
 各ステップで QR 分解により $W_{k+1}\in\mathrm{St}(p,n)$ が保証されるため，
 すべての反復を通じて直交性制約 $W_k^\top W_k = I_p$ が保たれる．
 
-多層ネットワーク $f=\ell_{W_L}\circ\cdots\circ\ell_{W_1}$ において
+多層ネットワーク（定義~\ref{def:mlp}）において
 各層の重み行列に Stiefel 制約 $W_l\in\mathrm{St}(n_l,n_{l-1})$ を課す場合を考える．
 $W_l\in\mathbb{R}^{n_{l-1}\times n_l}$ に対し
 $W_l^\top W_l = I_{n_l}$ が成り立つためには $n_{l-1}\ge n_l$ が必要であるから，
