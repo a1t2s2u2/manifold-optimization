@@ -73,12 +73,25 @@ $\sigma$ の要素ごとの適用を
 \begin{example}{代表的な活性化関数}{activation_examples}
 \leavevmode
 \begin{itemize}
-  \setlength{\itemsep}{2pt}
-  \item ReLU：$\sigma(t) = \max(0,\, t)$
-  \item シグモイド：$\sigma(t) = \dfrac{1}{1+e^{-t}}$
-  \item $\tanh$：$\sigma(t) = \tanh(t)$
+  \setlength{\itemsep}{6pt}
+  \item ReLU：$\sigma(t) = \max(0,\, t)$，\quad
+    $\sigma'(t) = \begin{cases}1 & (t>0)\\0 & (t\le 0)\end{cases}$
+  \item シグモイド：$\sigma(t) = \dfrac{1}{1+e^{-t}}$，\quad
+    $\sigma'(t) = \sigma(t)\bigl(1-\sigma(t)\bigr)$
+  \item $\tanh$：$\sigma(t) = \tanh(t)$，\quad
+    $\sigma'(t) = 1-\tanh^2(t)$
 \end{itemize}
 \end{example}
+
+\begin{remark}{シグモイドの導関数}{sigmoid_deriv}
+\begin{align*}
+\sigma'(t)
+&= \frac{e^{-t}}{(1+e^{-t})^2} \\
+&= \frac{1}{1+e^{-t}}\cdot\frac{e^{-t}}{1+e^{-t}} \\
+&= \sigma(t)\cdot\left(1-\frac{1}{1+e^{-t}}\right) \\
+&= \sigma(t)\bigl(1-\sigma(t)\bigr).
+\end{align*}
+\end{remark}
 
 定義~\ref{def:linear}の線形変換モデルに活性化関数を適用すると，
 \[
@@ -634,6 +647,50 @@ $W_1\in\mathrm{St}(3,4)$，$W_2\in\mathrm{St}(1,3)$ であり，
 訓練データ $(x,y)\in\mathbb{R}^4\times\mathbb{R}$ に対する
 1 回の更新は以下の通りである．
 
+\begin{center}
+\begin{tikzpicture}[
+  neuron/.style={circle, draw, thick, minimum size=14pt, inner sep=0pt},
+  hidden/.style={neuron, fill=blue!10},
+  output/.style={neuron, fill=orange!15},
+]
+  \def\ls{2.5}
+
+  % Input layer (4 nodes)
+  \foreach \i in {1,...,4}
+    \node[neuron] (i\i) at (0, {2.5-\i}) {};
+
+  % Hidden layer (3 nodes)
+  \foreach \i in {1,2,3}
+    \node[hidden] (h\i) at (\ls, {2-\i}) {};
+
+  % Output layer (1 node)
+  \node[output] (o1) at (2*\ls, 0.5) {};
+
+  % Connections: input -> hidden
+  \foreach \i in {1,...,4}
+    \foreach \j in {1,2,3}
+      \draw[-, gray!70] (i\i) -- (h\j);
+
+  % Connections: hidden -> output
+  \foreach \i in {1,2,3}
+    \draw[-, gray!70] (h\i) -- (o1);
+
+  % Layer labels
+  \node[font=\small] at (0, -2.0) {$h_0 = x \in\mathbb{R}^4$};
+  \node[font=\small] at (\ls, -1.5) {$h_1 \in\mathbb{R}^3$};
+  \node[font=\small] at (2*\ls, -0.3) {$h_2 \in\mathbb{R}$};
+
+  % Weight labels
+  \node[font=\small] at (0.5*\ls, 2.0) {$W_1$};
+  \node[font=\small] at (1.5*\ls, 1.5) {$W_2$};
+
+  % Activation labels
+  \node[font=\scriptsize, blue!60!black] at (\ls, 2.5) {ReLU};
+  \node[font=\scriptsize, orange!60!black] at (2*\ls, 1.3) {sigmoid};
+
+\end{tikzpicture}
+\end{center}
+
 \textbf{1. 順伝播：}
 \[
 h_1 = \mathrm{ReLU}(W_1^\top x)\in\mathbb{R}^3,\qquad
@@ -646,9 +703,14 @@ $\mathcal{L} = (h_2-y)^2$．
 \textbf{3. 誤差逆伝播：}
 $a_l = W_l^\top h_{l-1}$ とおくと，
 \begin{align*}
-\delta_2 &= \mathrm{sigmoid}'(a_2)\cdot 2(h_2-y)\in\mathbb{R}, \\
-\delta_1 &= \mathrm{ReLU}'(a_1)\odot(W_2\,\delta_2)\in\mathbb{R}^3.
+\delta_2 &= \mathrm{sigmoid}'(a_2)\cdot 2(h_2-y) \\
+         &= h_2(1-h_2)\cdot 2(h_2-y)\in\mathbb{R}, \\[6pt]
+\delta_1 &= \mathrm{ReLU}'(a_1)\odot(W_2\,\delta_2) \\
+         &= \mathbf{1}_{a_1>0}\odot(W_2\,\delta_2)\in\mathbb{R}^3.
 \end{align*}
+ここで $\mathbf{1}_{a_1>0}$ は $a_1$ の各成分が正なら $1$，
+それ以外なら $0$ をとるベクトルである
+（例~\ref{ex:activation_examples}）．
 ユークリッド勾配は
 $G_1 = x\,\delta_1^\top\in\mathbb{R}^{4\times 3}$，\;
 $G_2 = h_1\,\delta_2^\top\in\mathbb{R}^{3\times 1}$ である．
