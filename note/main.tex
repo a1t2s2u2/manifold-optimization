@@ -333,8 +333,8 @@ $\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
 が任意の $l=1,\ldots,L$ で成り立つ．
 したがって，各層の $\partial\mathcal{L}/\partial h_l$ が求まれば $\delta_l$ が得られる．
 
-$l=L$ のとき，$\mathcal{L}=c(h_L,\,y)$ であるから
-$\partial\mathcal{L}/\partial h_L$ はコスト関数から直接計算される．
+$l=L$ のとき，$h_L$ はネットワークの出力であるから
+$\partial\mathcal{L}/\partial h_L$ は直接求まる．
 
 $l\le L{-}1$ のとき，$\mathcal{L}$ は $h_l$ に
 $a_{l+1}=W_{l+1}^\top h_l$ を経由して依存するから，連鎖律より
