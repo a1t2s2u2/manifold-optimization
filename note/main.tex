@@ -212,13 +212,20 @@ $c(\hat{y},\,y)=\|\hat{y}-y\|^2$ とすると，損失関数は
 損失関数を最小化するには，$\mathcal{L}$ が最も急速に減少する方向を知る必要がある．
 
 \begin{definition}{ユークリッド勾配}{egrad}
-フロベニウス内積 $\langle A,B\rangle=\mathrm{tr}(A^\top B)$ に関して，
+滑らかな関数 $f\colon\mathbb{R}^{d}\to\mathbb{R}$ に対し，
 \[
-d\mathcal{L}(W)[Z] = \langle \nabla \mathcal{L}(W),\, Z \rangle
-\qquad (\forall\, Z\in\mathbb{R}^{n\times p})
+df(x)[\Delta x] = \nabla f(x)^\top \Delta x
+\qquad (\forall\, \Delta x\in\mathbb{R}^{d})
 \]
-を満たす行列 $\nabla \mathcal{L}(W)\in\mathbb{R}^{n\times p}$ を
-$\mathcal{L}$ の $W$ におけるユークリッド勾配と呼ぶ．
+を満たす $\nabla f(x)\in\mathbb{R}^{d}$ を
+$f$ の $x$ におけるユークリッド勾配と呼ぶ．
+行列 $W\in\mathbb{R}^{n\times p}$ に対しては，
+フロベニウス内積 $\langle A,B\rangle=\mathrm{tr}(A^\top B)$ を用いて
+\[
+d\mathcal{L}(W)[\Delta W] = \langle \nabla \mathcal{L}(W),\, \Delta W \rangle
+\qquad (\forall\, \Delta W\in\mathbb{R}^{n\times p})
+\]
+と書ける．
 \end{definition}
 
 \subsection{勾配降下法}
@@ -300,26 +307,25 @@ $a_l=W_l^\top h_{l-1}$ とおくと $h_l=\sigma(a_l)$ である．
 合成関数の微分の連鎖が次のように整理される．
 
 \begin{proposition}{誤差逆伝播法}{backprop}
-訓練データ $(x,y)$ に対する損失を $\mathcal{L}=c(h_L,\,y)$ とする（$c$ はコスト関数）．
-$\delta_l = \dfrac{\partial\mathcal{L}}{\partial a_l}\in\mathbb{R}^{n_l}$ とおくと，
-連鎖律から
+各層の勾配 $\partial\mathcal{L}/\partial W_l$ を効率的に計算するため，
+活性化関数に入る前の値 $a_l$ に関する損失の偏微分
+$\delta_l = \partial\mathcal{L}/\partial a_l\in\mathbb{R}^{n_l}$
+を導入する．このとき，
 \[
-\delta_L = \sigma'(a_L)\odot\frac{\partial\mathcal{L}}{\partial h_L},
-\qquad
-\delta_l = \sigma'(a_l)\odot(W_{l+1}\,\delta_{l+1})
-\quad (l=L{-}1,\ldots,1)
+\delta_l = \frac{\partial\mathcal{L}}{\partial h_l}\odot\sigma'(a_l)
+\qquad (l=1,\ldots,L)
 \]
-が成り立つ．ここで $\odot$ は要素ごとの積である．
-さらに，$(a_l)_j = \sum_i (W_l)_{ij}\,(h_{l-1})_i$ であるから，
-$\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
-連鎖律より $\partial\mathcal{L}/\partial (W_l)_{ij} = (h_{l-1})_i\,(\delta_l)_j$ となる．
-これを行列としてまとめると，
+が成り立つ．$l\le L{-}1$ では
+\[
+\frac{\partial\mathcal{L}}{\partial h_l} = W_{l+1}\,\delta_{l+1}
+\]
+である．さらに，各層の重みに関する勾配は
 \[
 \frac{\partial\mathcal{L}}{\partial W_l} = h_{l-1}\,\delta_l^\top
 \in\mathbb{R}^{n_{l-1}\times n_l}
 \qquad (l=1,\ldots,L)
 \]
-を得る．
+で与えられる．
 \end{proposition}
 
 \begin{proof}
@@ -344,6 +350,20 @@ $a_{l+1}=W_{l+1}^\top h_l$ を経由して依存するから，連鎖律より
 = W_{l+1}\,\delta_{l+1}
 \]
 である．
+
+最後に，$a_l = W_l^\top h_{l-1}$ であるから，
+$W_l$ の変分 $\Delta W_l$ に対し $\Delta a_l = \Delta W_l^\top h_{l-1}$ である．
+$W_l$ を $\Delta W_l$ だけ変化させると，
+$a_l = W_l^\top h_{l-1}$ は $\Delta a_l = \Delta W_l^\top h_{l-1}$ だけ変化する．
+$\delta_l = \partial\mathcal{L}/\partial a_l$ であるから，
+$\mathcal{L}$ の変化は
+\begin{align*}
+\delta_l^\top\,\Delta a_l
+&= \delta_l^\top (\Delta W_l^\top h_{l-1}) \\
+&= \langle h_{l-1}\,\delta_l^\top,\, \Delta W_l \rangle
+\end{align*}
+となる．これが任意の $\Delta W_l$ に対して成り立つから，
+$\partial\mathcal{L}/\partial W_l = h_{l-1}\,\delta_l^\top$ を得る．
 \end{proof}
 
 \subsection{具体例：XOR ゲートの学習}
