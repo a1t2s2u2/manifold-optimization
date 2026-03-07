@@ -204,19 +204,25 @@ $W_2\in\mathbb{R}^{4\times 1}$ である．
 
 \subsection{損失関数}
 
-滑らかな関数 $\mathcal{L}\colon\mathbb{R}^{n\times p}\to\mathbb{R}$ を損失関数と呼ぶ．
-これを最小化するような重み行列 $W$ を求めたい．
+\begin{definition}{コスト関数と損失関数}{cost}
+予測値 $\hat{y}\in\mathbb{R}^{p}$ と目標値 $y\in\mathbb{R}^{p}$ の乖離を測る
+滑らかな関数 $c\colon\mathbb{R}^{p}\times\mathbb{R}^{p}\to\mathbb{R}$ を
+コスト関数と呼ぶ．
+訓練データ $\{(x_i,\, y_i)\}_{i=1}^{N}\subset\mathbb{R}^{n}\times\mathbb{R}^{p}$
+に対し，損失関数 $\mathcal{L}$ を
 \[
-\min_{W\in\mathbb{R}^{n\times p}}\, \mathcal{L}(W)
+\mathcal{L}(W) = \frac{1}{N}\sum_{i=1}^{N} c\bigl(f_W(x_i),\, y_i\bigr)
 \]
+によって定める．これを最小化するような重み行列 $W$ を求めたい：
+$\displaystyle\min_{W}\, \mathcal{L}(W)$．
+\end{definition}
 
 \begin{example}{平均二乗誤差}{mse}
-訓練データ $\{(x_i,\, y_i)\}_{i=1}^{N}\subset\mathbb{R}^{n}\times\mathbb{R}^{p}$
-に対し，平均二乗誤差（MSE）を
+$c(\hat{y},\,y)=\|\hat{y}-y\|^2$ とすると，損失関数は
 \[
 \mathcal{L}(W) = \frac{1}{N}\sum_{i=1}^{N}\bigl\|f_W(x_i)-y_i\bigr\|^2
 \]
-によって定める．これは回帰問題における代表的な損失関数である．
+となる．これは回帰問題における代表的な損失関数である．
 \end{example}
 
 \begin{definition}{ユークリッド勾配}{egrad}
