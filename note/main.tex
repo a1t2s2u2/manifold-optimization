@@ -323,67 +323,28 @@ $\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
 \end{proposition}
 
 \begin{proof}
-\textbf{$\delta_L$ の導出：}
-第 $L$ 層では
-\[
-\left\{
-\begin{aligned}
-a_L &= W_L^\top h_{L-1}, \\
-h_L &= \sigma(a_L), \\
-\mathcal{L} &= c(h_L,\,y)
-\end{aligned}
-\right.
-\]
-が成り立つ．$\sigma$ は要素ごとの適用であるから，連鎖律より
-\[
-\delta_L
-= \frac{\partial\mathcal{L}}{\partial a_L}
-= \frac{\partial\mathcal{L}}{\partial h_L}\odot\frac{\partial h_L}{\partial a_L}
-= \frac{\partial\mathcal{L}}{\partial h_L}\odot\sigma'(a_L)
-\]
-を得る．
-
-\textbf{$\delta_{L-1}$ の導出：}
-$\delta_L$ が求まったので，これを用いて $\delta_{L-1}$ を求める．
-第 $L{-}1$ 層と第 $L$ 層の間では
-\[
-\left\{
-\begin{aligned}
-h_{L-1} &= \sigma(a_{L-1}), \\
-a_L &= W_L^\top h_{L-1}
-\end{aligned}
-\right.
-\]
-が成り立つ．$\delta_L = \partial\mathcal{L}/\partial a_L$ は既知である．
-$\mathcal{L}$ は $h_{L-1}$ に $a_L = W_L^\top h_{L-1}$ を経由して依存するから，
-連鎖律より
-\[
-\frac{\partial\mathcal{L}}{\partial h_{L-1}}
-= \frac{\partial a_L}{\partial h_{L-1}}\,\frac{\partial\mathcal{L}}{\partial a_L}
-= W_L\,\delta_L
-\]
-である．さらに $h_{L-1} = \sigma(a_{L-1})$ の連鎖律より
+各層で $h_l = \sigma(a_l)$ が成り立つから，連鎖律より
 \begin{align*}
-\delta_{L-1}
-&= \frac{\partial\mathcal{L}}{\partial a_{L-1}} \\
-&= \frac{\partial\mathcal{L}}{\partial h_{L-1}}\odot\frac{\partial h_{L-1}}{\partial a_{L-1}} \\
-&= \frac{\partial\mathcal{L}}{\partial h_{L-1}}\odot\sigma'(a_{L-1}) \\
-&= (W_L\,\delta_L)\odot\sigma'(a_{L-1})
+\delta_l
+&= \frac{\partial\mathcal{L}}{\partial a_l} \\
+&= \frac{\partial\mathcal{L}}{\partial h_l}\odot\frac{\partial h_l}{\partial a_l} \\
+&= \frac{\partial\mathcal{L}}{\partial h_l}\odot\sigma'(a_l)
 \end{align*}
-を得る．
+が任意の $l=1,\ldots,L$ で成り立つ．
+したがって，各層の $\partial\mathcal{L}/\partial h_l$ が求まれば $\delta_l$ が得られる．
 
-\textbf{一般の $\delta_l$（$l=L{-}2,\ldots,1$）：}
-同様に，$\delta_{l+1}$ が既知のとき，
-$a_{l+1} = W_{l+1}^\top h_l$ と $h_l = \sigma(a_l)$ の連鎖律から
+$l=L$ のとき，$\mathcal{L}=c(h_L,\,y)$ であるから
+$\partial\mathcal{L}/\partial h_L$ はコスト関数から直接計算される．
+
+$l\le L{-}1$ のとき，$\mathcal{L}$ は $h_l$ に
+$a_{l+1}=W_{l+1}^\top h_l$ を経由して依存するから，連鎖律より
 \[
-\delta_l = \sigma'(a_l)\odot(W_{l+1}\,\delta_{l+1})
+\frac{\partial\mathcal{L}}{\partial h_l}
+= \frac{\partial a_{l+1}}{\partial h_l}\,\frac{\partial\mathcal{L}}{\partial a_{l+1}}
+= W_{l+1}\,\delta_{l+1}
 \]
-を得る．
+である．
 \end{proof}
-
-$l=L$ から $l=1$ へ逆向きに $\delta_l$ を計算することで，
-全ての $\partial\mathcal{L}/\partial W_l$ が得られる．
-計算量は順伝播と同程度であり，層数 $L$ に対して線形である．
 
 \subsection{具体例：XOR ゲートの学習}
 
