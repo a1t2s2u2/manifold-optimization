@@ -248,7 +248,55 @@ W_{k+1} = W_k - \eta\,\nabla \mathcal{L}(W_k)
 各重み行列 $W_l$ に関する偏微分 $\partial\mathcal{L}/\partial W_l$ を
 連鎖律により計算する方法を述べる．
 
-$a_l=W_l^\top h_{l-1}$ とおくと $h_l=\sigma(a_l)$ であるから，
+$a_l=W_l^\top h_{l-1}$ とおくと $h_l=\sigma(a_l)$ である．
+各層の計算は次のように連なっている：
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  box/.style={rectangle, draw, thick, minimum width=28pt, minimum height=20pt, font=\small},
+  val/.style={font=\small},
+  >=stealth
+]
+  \def\sp{2.2}
+
+  % Forward pass
+  \node[val] (hl) at (0,0) {$h_{l-1}$};
+  \node[box] (Wl) at (\sp,0) {$W_l^\top$};
+  \node[val] (al) at (2*\sp,0) {$a_l$};
+  \node[box] (sl) at (3*\sp,0) {$\sigma$};
+  \node[val] (hlout) at (4*\sp,0) {$h_l$};
+
+  % Forward arrows
+  \draw[->, blue!70!black] (hl) -- (Wl);
+  \draw[->, blue!70!black] (Wl) -- (al);
+  \draw[->, blue!70!black] (al) -- (sl);
+  \draw[->, blue!70!black] (sl) -- (hlout);
+
+  % Forward label
+  \node[above, font=\scriptsize, blue!70!black] at (2*\sp, 0.7) {順伝播};
+
+  % Backward pass
+  \node[val, red!70!black] (dl) at (2*\sp,-1.2) {$\delta_l$};
+  \node[val, red!70!black] (dlnext) at (4*\sp,-1.2) {$\delta_{l+1}$};
+
+  % Backward arrow
+  \draw[->, red!60, thick] (dlnext) -- (dl)
+    node[midway, below, font=\scriptsize, red!70!black] {$\sigma'(a_l)\odot(W_{l+1}\,\cdot)$};
+
+  % Backward label
+  \node[above, font=\scriptsize, red!70!black] at (3*\sp, -0.8) {逆伝播};
+
+  % Gradient arrow
+  \draw[->, gray, dashed] (dl) -- ++(0,-0.8)
+    node[below, font=\scriptsize] {$G_l = h_{l-1}\,\delta_l^\top$};
+
+\end{tikzpicture}
+\caption{第 $l$ 層における順伝播と逆伝播．
+順伝播で $h_l = \sigma(W_l^\top h_{l-1})$ を計算し，
+逆伝播で $\delta_{l+1}$ から $\delta_l$ を求め，勾配 $G_l$ を得る．}
+\end{figure}
+
 合成関数の微分の連鎖が次のように整理される．
 
 \begin{proposition}{誤差逆伝播法}{backprop}
@@ -264,13 +312,8 @@ $\delta_l = \dfrac{\partial\mathcal{L}}{\partial a_l}\in\mathbb{R}^{n_l}$ とお
 が成り立つ．ここで $\odot$ は要素ごとの積である．
 さらに，$(a_l)_j = \sum_i (W_l)_{ij}\,(h_{l-1})_i$ であるから，
 $\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
-連鎖律より
-\[
-\frac{\partial\mathcal{L}}{\partial (W_l)_{ij}}
-= (h_{l-1})_i\,(\delta_l)_j.
-\]
-これを行列としてまとめると，列ベクトル $h_{l-1}\in\mathbb{R}^{n_{l-1}}$ と
-行ベクトル $\delta_l^\top\in\mathbb{R}^{1\times n_l}$ の外積
+連鎖律より $\partial\mathcal{L}/\partial (W_l)_{ij} = (h_{l-1})_i\,(\delta_l)_j$ となる．
+これを行列としてまとめると，
 \[
 \frac{\partial\mathcal{L}}{\partial W_l} = h_{l-1}\,\delta_l^\top
 \in\mathbb{R}^{n_{l-1}\times n_l}
@@ -278,6 +321,65 @@ $\partial (a_l)_j / \partial (W_l)_{ij} = (h_{l-1})_i$ であり，
 \]
 を得る．
 \end{proposition}
+
+\begin{proof}
+\textbf{$\delta_L$ の導出：}
+第 $L$ 層では
+\[
+\left\{
+\begin{aligned}
+a_L &= W_L^\top h_{L-1}, \\
+h_L &= \sigma(a_L), \\
+\mathcal{L} &= c(h_L,\,y)
+\end{aligned}
+\right.
+\]
+が成り立つ．$\sigma$ は要素ごとの適用であるから，連鎖律より
+\[
+\delta_L
+= \frac{\partial\mathcal{L}}{\partial a_L}
+= \frac{\partial\mathcal{L}}{\partial h_L}\odot\frac{\partial h_L}{\partial a_L}
+= \frac{\partial\mathcal{L}}{\partial h_L}\odot\sigma'(a_L)
+\]
+を得る．
+
+\textbf{$\delta_{L-1}$ の導出：}
+$\delta_L$ が求まったので，これを用いて $\delta_{L-1}$ を求める．
+第 $L{-}1$ 層と第 $L$ 層の間では
+\[
+\left\{
+\begin{aligned}
+h_{L-1} &= \sigma(a_{L-1}), \\
+a_L &= W_L^\top h_{L-1}
+\end{aligned}
+\right.
+\]
+が成り立つ．$\delta_L = \partial\mathcal{L}/\partial a_L$ は既知である．
+$\mathcal{L}$ は $h_{L-1}$ に $a_L = W_L^\top h_{L-1}$ を経由して依存するから，
+連鎖律より
+\[
+\frac{\partial\mathcal{L}}{\partial h_{L-1}}
+= \frac{\partial a_L}{\partial h_{L-1}}\,\frac{\partial\mathcal{L}}{\partial a_L}
+= W_L\,\delta_L
+\]
+である．さらに $h_{L-1} = \sigma(a_{L-1})$ の連鎖律より
+\begin{align*}
+\delta_{L-1}
+&= \frac{\partial\mathcal{L}}{\partial a_{L-1}} \\
+&= \frac{\partial\mathcal{L}}{\partial h_{L-1}}\odot\frac{\partial h_{L-1}}{\partial a_{L-1}} \\
+&= \frac{\partial\mathcal{L}}{\partial h_{L-1}}\odot\sigma'(a_{L-1}) \\
+&= (W_L\,\delta_L)\odot\sigma'(a_{L-1})
+\end{align*}
+を得る．
+
+\textbf{一般の $\delta_l$（$l=L{-}2,\ldots,1$）：}
+同様に，$\delta_{l+1}$ が既知のとき，
+$a_{l+1} = W_{l+1}^\top h_l$ と $h_l = \sigma(a_l)$ の連鎖律から
+\[
+\delta_l = \sigma'(a_l)\odot(W_{l+1}\,\delta_{l+1})
+\]
+を得る．
+\end{proof}
 
 $l=L$ から $l=1$ へ逆向きに $\delta_l$ を計算することで，
 全ての $\partial\mathcal{L}/\partial W_l$ が得られる．
